@@ -1,0 +1,19 @@
+.board {
+    background-color: #f8f9fa;
+}
+
+.board__cell {
+    flex: 0 0 auto;
+    min-width: 1px;
+    position: relative;
+    margin: 1px;
+    box-sizing: border-box;
+    height: 70px;
+    border: 1px solid #868e96;
+}
+
+.board__row-placeholder {
+    height: 20px;
+    background-color: #dbe4ff;
+    border: 1px dashed #748ffc;
+}

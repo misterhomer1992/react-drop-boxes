@@ -1,0 +1,1 @@
+ReactJS drop boxes based on react-dnd.
