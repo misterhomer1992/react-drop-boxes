@@ -3,7 +3,7 @@ import { ghostCanDrop, updateGhostItemsPosition } from './ghost';
 
 export const canDrop = (params) => {
     let result;
-    console.log(params.dropCell.isRowGhost)
+
     if (params.dropCell.isRowGhost) {
         result = ghostCanDrop(params);
     } else {
