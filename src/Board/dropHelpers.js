@@ -7,9 +7,17 @@ const canvasDropRules = [
 	...generalDropRules,
 
 	{
+		name: 'is swap check',
+		off: true,
+		fn: ({ isSwap }) => {
+			return !isSwap;
+		}
+	},
+	{
 		name: 'size drop item fit',
-		fn: ({ items, dropCell, dragItem, isItemReplacement }) => {
-			if (dropCell.row === dragItem.row) {
+		off: true,
+		fn: ({ items, dropCell, dragItem, isItemReplacement, isRowGhost }) => {
+			if (isRowGhost || dropCell.row === dragItem.row) {
 				return true;
 			}
 
@@ -38,9 +46,9 @@ const canvasDropRules = [
 
 	{
 		name: 'from drag row item fit',
-		off: false,
-		fn: ({ items, dropCell, dragItem, isItemReplacement }) => {
-			if (dropCell.row === dragItem.row) {
+		off: true,
+		fn: ({ items, dropCell, dragItem, isItemReplacement, isRowGhost }) => {			
+			if (isRowGhost || dropCell.row === dragItem.row) {
 				return true;
 			}
 
@@ -67,43 +75,21 @@ const canvasDropRules = [
 
 			return totalRowItemsSize <= 3;
 		}
-	},
-
-	//row next empty item rule
-	/*
-		rule works only in one row boundary
-	*/
-	// {
-	//     name: 'row boundary',
-	//     fn: (items, dropCell, dragItem, isItemReplacement) => {
-	//         //in different rows or the same item
-	//         if (dropCell.row !== dragItem.row || (dropCell.row === dragItem.row && dropCell.order === dragItem.order)) {
-	//             return true;
-	//         }
-
-	//         const dropItem = getItem({
-	//             items,
-	//             row: dropCell.row,
-	//             order: dropCell.order,
-	//         });
-
-	//         return typeof dropItem !== 'undefined';
-	//     }
-	// }
+	}
 ];
 
 const formDropRules = [
 	...generalDropRules
 ];
 
-const areAllRulesIsValid = ({ rules, items, dropCell, dragItem, isItemReplacement, dropItem }) => {
+const areAllRulesIsValid = ({ rules, items, dropCell, dragItem, isSwap, isRowGhost }) => {
 	return rules.every((rule) => {
 		//we can switch any rule
 		if (typeof rule.off !== 'undefined' && rule.off) {
 			return true;
 		}
 
-		const result = rule.fn({ items, dropCell, dragItem, isItemReplacement, dropItem });
+		const result = rule.fn({ items, dropCell, dragItem, isSwap, isRowGhost });
 
 		if (!result) {
 			//console.log(`%cDrop on:${rule.name}`, 'color: red');
@@ -113,24 +99,15 @@ const areAllRulesIsValid = ({ rules, items, dropCell, dragItem, isItemReplacemen
 	});
 };
 
-const canDrop = ({ dropCell, dragItem, items }) => {
+const canDrop = ({ dropCell, dragItem, items, isRowGhost }) => {
 	const rules = dragItem.type === CANVAS_COMPONENT ? canvasDropRules : formDropRules;
-	const isItemReplacement = isItemExist({
+	const isSwap = isItemExist({
 		items,
 		row: dropCell.row,
 		order: dropCell.order,
 	});
-	let dropItem = null;
 
-	if (isItemReplacement) {
-		dropItem = getItem({
-			items,
-			row: dropCell.row,
-			order: dropCell.order,
-		});
-	}
-
-	const result = areAllRulesIsValid({ rules, items, dropCell, dragItem, isItemReplacement, dropItem });
+	const result = areAllRulesIsValid({ rules, items, dropCell, dragItem, isSwap, isRowGhost });
 
 	// if (result) {
 	//     console.log(`%c
@@ -187,14 +164,14 @@ const normalizeRows = ({ items }) => {
 	});
 };
 
-const normalizeOrderForMultipleRows = (items, { dragItem, dropItem, hasSwap }) => {
+const normalizeOrderForMultipleRows = (items, { dragItem, dropItem }) => {
 	const nextItemsInRow = getNextItemsInRow({
 		items,
 		row: dragItem.row,
 		order: dragItem.order
 	});
 
-	const shouldNormalize = dragItem.row !== dropItem.row && nextItemsInRow.length > 0 && !hasSwap;
+	const shouldNormalize = dragItem.row !== dropItem.row && nextItemsInRow.length > 0;
 
 	if (!shouldNormalize) {
 		return items;
@@ -216,8 +193,8 @@ const normalizeOrderForMultipleRows = (items, { dragItem, dropItem, hasSwap }) =
 	});
 };
 
-const normalizeOrderForSingeRow = (items, { dragItem, dropItem, hasSwap }) => {
-	const shouldNormalize = !hasSwap && dragItem.row === dropItem.row;
+const normalizeOrderForSingeRow = (items, { dragItem, dropItem }) => {
+	const shouldNormalize = dragItem.row === dropItem.row;
 
 	if (!shouldNormalize) {
 		return items;
@@ -247,47 +224,28 @@ const normalizeOrder = (items, params) => {
 };
 
 const updatePosition = ({ dragItem, dropItem, items }) => {
-	let hasSwap = false;
-
-	items = items.map((cell) => {
-		const isNewItem = isItem({
-			sourceItem: cell,
+	items = items.map((item) => {
+		const isMatchedItem = isItem({
+			sourceItem: item,
 			matchItem: dragItem
 		});
 
-		if (isNewItem) {
-			const newItem = getItem({ items, order: dragItem.order, row: dragItem.row })
-
-			return {
-				...newItem,
-				row: dropItem.row,
-				order: dropItem.order,
-			};
+		if (!isMatchedItem) {
+			return item;
 		}
 
-		const isOldItem = isItem({
-			sourceItem: cell,
-			matchItem: dropItem
-		});
+		const newItem = getItem({ items, order: dragItem.order, row: dragItem.row })
 
-		if (isOldItem) {
-			const oldItem = getItem({ items, order: dropItem.order, row: dropItem.row });
-			hasSwap = true;
-
-			return {
-				...oldItem,
-				row: dragItem.row,
-				order: dragItem.order,
-			};
-		}
-
-		return cell
+		return {
+			...newItem,
+			row: dropItem.row,
+			order: dropItem.order,
+		};
 	});
 
 	items = normalizeOrder(items, {
 		dragItem,
-		dropItem,
-		hasSwap
+		dropItem
 	});
 
 	items = normalizeRows({

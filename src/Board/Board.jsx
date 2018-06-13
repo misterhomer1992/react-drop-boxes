@@ -3,12 +3,12 @@ import BoardCell from './BoardCell';
 import BoardRow from './BoardRow';
 import BoardComponent from './BoardComponent';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
-import { canDrop, updatePosition } from './dropHelpers';
+import {canDrop, updatePosition} from './dropHelpers/index';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
 
 const boardStyles = {
-	maxWidth: '300px',
+	maxWidth: '400px',
 	margin: '100px auto',
 	position: 'relative'
 };
@@ -94,6 +94,16 @@ export default class extends Component {
 	canDropTo = (dropCell) => {
 		const { dragItem, items } = this.state;
 
+		const isSwap = isItemExist({
+			items,
+			row: dropCell.row,
+			order: dropCell.order,
+		});
+
+		if (isSwap) {
+			return false;
+		}
+
 		return canDrop({
 			items,
 			dropCell,
@@ -116,7 +126,7 @@ export default class extends Component {
 	updatePosition = (dropItem) => {
 		const { dragItem, items } = this.state;
 
-		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
+		if (isItem({ sourceItem: dropItem, matchItem: dragItem }) && !dropItem.isRowGhost) {
 			return;
 		}
 
@@ -166,7 +176,7 @@ export default class extends Component {
 
 	getBoardCell({ cellKey, order, row, cellSize }) {
 		return (
-			<BoardCell 
+			<BoardCell
 				key={cellKey}
 				order={order}
 				row={row}
@@ -185,7 +195,31 @@ export default class extends Component {
 		);
 	}
 
-	renderBoardRow(row) {
+	getPlaceholderRow(row) {
+		// return (
+		// 	<div></div>
+		// );
+		row = row - 0.5;
+		
+		const cellKey = `${row}_${1}`;
+
+		return (
+			<BoardRow key={`${row}_placeholder`}>
+				<BoardCell
+					key={cellKey}
+					order={1}
+					row={row}
+					size={1}
+					canDropTo={this.canDropTo}
+					updatePosition={this.updatePosition}
+					dragItem={this.state.dragItem}
+					isRowGhost={true}
+				></BoardCell>
+			</BoardRow>
+		);
+	}
+
+	renderBoardRow(row, isLast) {
 		const { items, dragging } = this.state;
 		const cells = [];
 		const colsCount = getRowCellsCount({ items, row });
@@ -216,7 +250,8 @@ export default class extends Component {
 
 		return (
 			<Fragment key={row}>
-				<BoardRow key={row}>
+				{!isLast && this.getPlaceholderRow(row)}
+				<BoardRow>
 					{cells}
 				</BoardRow>
 			</Fragment>
@@ -227,8 +262,10 @@ export default class extends Component {
 		const rows = [];
 
 		for (let i = 1; i <= this.state.rowsCount + 1; i++) {
+			const isLast = i === this.state.rowsCount + 1;
+
 			rows.push(
-				this.renderBoardRow(i)
+				this.renderBoardRow(i, isLast)
 			);
 		}
 

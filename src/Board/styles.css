@@ -1,15 +1,24 @@
 .board {
     background-color: #f8f9fa;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    padding: 5px;
 }
 
 .board__cell {
     flex: 0 0 auto;
     min-width: 1px;
     position: relative;
-    margin: 1px;
     box-sizing: border-box;
     height: 70px;
-    border: 1px solid #868e96;
+    margin-bottom: 1px;
+}
+
+.board__cell--hr-ghost {
+    height: 20px;
+}
+
+.board__cell + .board__cell {
+    margin-left: 1px;
 }
 
 .board__row-placeholder {

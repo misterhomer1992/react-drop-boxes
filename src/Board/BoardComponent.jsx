@@ -40,14 +40,15 @@ export default class extends Component {
 
         const componentStyle = {
             position: 'absolute',
-            left: '5px',
-            top: '5px',
-            right: '5px',
-            bottom: '5px',
+            left: '0',
+            top: '0',
+            right: '0',
+            bottom: '0',
             lineHeight: 3.5,
             transition: 'all ease 0.3s',
             transform: isDragging ? 'scale(0.6)' : 'scale(1)',
-            backgroundColor: isDragging ? '#a5d8ff' : '#4dabf7'
+            backgroundColor: isDragging ? '#a5d8ff' : '#4dabf7',
+            boxShadow: isDragging ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
         };
 
         return (

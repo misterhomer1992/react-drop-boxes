@@ -1,22 +1,27 @@
 import React, { Component } from 'react';
 import { DropTarget } from 'react-dnd';
+import classnames from 'classnames';
 
 const squareTarget = {
-    canDrop(props) {
-        const { order, row } = props;
+    canDrop(props, monitor) {
+        const { order, row, isRowGhost } = props;
 
+        //console.log(monitor.getClientOffset());
+    
         return props.canDropTo({
             order,
-            row
+            row,
+            isRowGhost
         });
     },
 
     drop(props, monitor) {
-        const { order, row, updatePosition } = props;
+        const { order, row, updatePosition, isRowGhost } = props;
 
         updatePosition({
             order,
-            row
+            row,
+            isRowGhost
         })
     }
 };
@@ -27,6 +32,7 @@ function collect(connect, monitor) {
         isOver: monitor.isOver(),
         canDrop: monitor.canDrop(),
         getDropResult: monitor.getDropResult,
+        sourceClientOffset: monitor.getSourceClientOffset()
     };
 }
 
@@ -38,16 +44,12 @@ const getBoardCellBackgroundColor = ({ canDrop, isOver }) => {
     if (canDrop && !isOver) {
         return '#b2f2bb';
     }
-
-    if (!canDrop && isOver) {
-        return '#e8590c';
-    }
 }
 
 @DropTarget('cell', squareTarget, collect)
 class BoardCell extends Component {
     render() {
-        const { connectDropTarget, isOver, canDrop, size, dragItem } = this.props;
+        const { connectDropTarget, isOver, canDrop, size, dragItem, isRowGhost } = this.props;
 
         let cellPercentage = 33.3333333333;
 
@@ -62,8 +64,12 @@ class BoardCell extends Component {
             width: `${cellPercentage}%`
         };
 
+        const componentClasses = classnames('board__cell', {
+            'board__cell--hr-ghost': isRowGhost
+        });
+
         return connectDropTarget(
-            <div className='board__cell' style={boardCellStyles}>
+            <div className={componentClasses} style={boardCellStyles}>
                 {this.props.children}
             </div>
         );
@@ -71,7 +77,8 @@ class BoardCell extends Component {
 }
 
 BoardCell.defaultProps = {
-    size: 1
+    size: 1,
+    isRowGhost: false
 };
 
 export default BoardCell;
