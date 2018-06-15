@@ -3,82 +3,91 @@ import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 const squareTarget = {
-	canDrop (props, monitor) {
-		const { order, row, isRowGhost } = props;
+    canDrop(props, monitor) {
+        const { order, row, isRowGhost, isCellGhost } = props;
 
-		//console.log(monitor.getClientOffset());
+        //console.log(monitor.getClientOffset());
 
-		return props.canDropTo({
-			order,
-			row,
-			isRowGhost
-		});
-	},
+        return props.canDropTo({
+            order,
+            row,
+            isRowGhost,
+            isCellGhost
+        });
+    },
 
-	drop (props, monitor) {
-		const { order, row, updatePosition, isRowGhost } = props;
+    drop(props, monitor) {
+        const { order, row, updatePosition, isRowGhost, isCellGhost } = props;
 
-		updatePosition({
-			order,
-			row,
-			isRowGhost
-		})
-	}
+        updatePosition({
+            order,
+            row,
+            isRowGhost,
+            isCellGhost
+        })
+    }
 };
 
-function collect (connect, monitor) {
-	return {
-		connectDropTarget: connect.dropTarget(),
-		isOver: monitor.isOver(),
-		canDrop: monitor.canDrop(),
-		getDropResult: monitor.getDropResult,
-		sourceClientOffset: monitor.getSourceClientOffset()
-	};
+function collect(connect, monitor) {
+    return {
+        connectDropTarget: connect.dropTarget(),
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+        getDropResult: monitor.getDropResult,
+        sourceClientOffset: monitor.getSourceClientOffset()
+    };
 }
 
 const getBoardCellBackgroundColor = ({ canDrop, isOver }) => {
-	if (canDrop && isOver) {
-		return '#fcc419';
-	}
+    if (canDrop && isOver) {
+        return '#fcc419';
+    }
 
-	if (canDrop && !isOver) {
-		return '#b2f2bb';
-	}
+    if (canDrop && !isOver) {
+        return '#b2f2bb';
+    }
 };
 
 @DropTarget('cell', squareTarget, collect)
 class BoardCell extends Component {
-	render () {
-		const { connectDropTarget, isOver, canDrop, size, dragItem, isRowGhost } = this.props;
+    render() {
+        const { connectDropTarget, isOver, canDrop, size, dragItem, isRowGhost, isCellGhost } = this.props;
 
-		let cellPercentage = 33.3333333333;
+        let cellPercentage = 33.3333333333;
 
-		if (canDrop && isOver) {
-			cellPercentage *= dragItem.size;
-		} else {
-			cellPercentage *= size;
-		}
+        // if (isCellGhost) {
+        //     cellPercentage = null;
+        // } else {
+            
+        // }
 
-		var boardCellStyles = {
-			backgroundColor: getBoardCellBackgroundColor({ canDrop, isOver }),
-			width: `${cellPercentage}%`
-		};
+        if (canDrop && isOver) {
+            cellPercentage *= dragItem.size;
+        } else {
+            cellPercentage *= size;
+        }
+        var boardCellStyles = {
+            backgroundColor: getBoardCellBackgroundColor({ canDrop, isOver }),
+            width: `${cellPercentage}%`
+        };
 
-		const componentClasses = classnames('board__cell', {
-			'board__cell--hr-ghost': isRowGhost
-		});
+        const componentClasses = classnames('board__cell', {
+            'board__cell--hr-ghost': isRowGhost,
+            'board__cell--vr-ghost': isCellGhost
+        });
 
-		return connectDropTarget(
-			<div className={componentClasses} style={boardCellStyles}>
-				{this.props.children}
-			</div>
-		);
-	}
+        return connectDropTarget(
+            <div className={componentClasses} style={boardCellStyles}>
+                {this.props.children}
+            </div>
+        );
+    }
 }
 
 BoardCell.defaultProps = {
-	size: 1,
-	isRowGhost: false
+    size: 1,
+    isRowGhost: false,
+    isCellGhost: false
 };
 
 export default BoardCell;

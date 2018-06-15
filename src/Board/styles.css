@@ -17,7 +17,12 @@
     height: 20px;
 }
 
-.board__cell + .board__cell {
+.board__cell--vr-ghost {
+    width: 20px;
+    height: 70px;
+}
+
+.board__cell+.board__cell {
     margin-left: 1px;
 }
 

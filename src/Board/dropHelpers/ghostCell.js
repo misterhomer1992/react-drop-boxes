@@ -52,7 +52,7 @@ const normalizeRows = (items, { dropItem, dragItem }) => {
     });
 };
 
-export const ghostCanDrop = (params) => {
+export const ghostCellCanDrop = (params) => {
     const result = areAllRulesIsValid(rules, params);
 
     return result;

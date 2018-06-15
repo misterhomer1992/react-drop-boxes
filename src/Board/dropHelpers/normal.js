@@ -23,7 +23,7 @@ const rules = [
     },
 ];
 
-const normalizeRows = ({ items }) => {
+const normalizeRows = (items) => {
     const emptyRows = getEmptyRows({
         items
     });
@@ -126,7 +126,7 @@ const areAllRulesIsValid = (rules, params) => {
     });
 };
 
-const moveItem = (items, {dragItem, dropItem}) => {
+const moveItem = (items, { dragItem, dropItem }) => {
     return items.map((item) => {
         const isMatchedItem = isItem({
             sourceItem: item,
@@ -152,20 +152,24 @@ export const normalCanDrop = (params) => {
     return result;
 };
 
+export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
+    items = normalizeOrder(items, {
+        dragItem,
+        dropItem
+    });
+
+    items = normalizeRows(items);
+
+    return items;
+}
+
 export const updateNormalItemsPosition = ({ dragItem, dropItem, items }) => {
     items = moveItem(items, {
         dragItem,
         dropItem
     });
 
-    items = normalizeOrder(items, {
-        dragItem,
-        dropItem
-    });
-
-    items = normalizeRows({
-        items
-    });
+    items = normalizeNormalMove(items, { dragItem, dropItem });
 
     return items;
 };

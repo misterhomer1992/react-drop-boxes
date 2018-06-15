@@ -3,7 +3,7 @@ import BoardCell from './BoardCell';
 import BoardRow from './BoardRow';
 import BoardComponent from './BoardComponent';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
-import {canDrop, updatePosition} from './dropHelpers/index';
+import { canDrop, updatePosition } from './dropHelpers/index';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
 
@@ -195,12 +195,31 @@ export default class extends Component {
 		);
 	}
 
+	getPlaceholderItemCell(row, order) {
+		order = order + 0.5;
+
+		const cellKey = `${row}_${order}`;
+
+		return (
+			<BoardCell
+				key={cellKey}
+				order={order}
+				row={row}
+				size={1}
+				canDropTo={this.canDropTo}
+				updatePosition={this.updatePosition}
+				dragItem={this.state.dragItem}
+				isCellGhost={true}
+			></BoardCell>
+		);
+	}
+
 	getPlaceholderRow(row) {
 		// return (
 		// 	<div></div>
 		// );
 		row = row - 0.5;
-		
+
 		const cellKey = `${row}_${1}`;
 
 		return (
@@ -225,6 +244,10 @@ export default class extends Component {
 		const colsCount = getRowCellsCount({ items, row });
 		let rowCapacity = 0;
 
+		cells.push(
+			this.getPlaceholderItemCell(row, 0)
+		);
+
 		for (let order = 1; order <= colsCount; order++) {
 			const cellKey = `${row}_${order}`;
 			const componentMetaData = this.getComponentMetaData({ order, row });
@@ -237,6 +260,12 @@ export default class extends Component {
 				cells.push(
 					this.getBoardCell({ cellKey, order, row, cellSize })
 				);
+
+				if (order != colsCount) {
+					cells.push(
+						this.getPlaceholderItemCell(row, order)
+					);
+				}
 			}
 		}
 
@@ -245,6 +274,11 @@ export default class extends Component {
 			const cellKey = `${row}_${order}`;
 			cells.push(
 				this.getBoardCell({ cellKey, order, row, cellSize: 1 })
+			);
+		} else {
+			const order = colsCount + 1;
+			cells.push(
+				this.getPlaceholderItemCell(row, order)
 			);
 		}
 
