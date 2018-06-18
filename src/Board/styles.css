@@ -23,7 +23,7 @@
 }
 
 .board__cell+.board__cell {
-    margin-left: 1px;
+    margin-left: 20px;
 }
 
 .board__row-placeholder {

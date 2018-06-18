@@ -67,6 +67,54 @@ export default class extends Component {
 		],
 		dragItem: {}
 	};
+	canDropTo = (dropCell) => {
+		const { dragItem, items } = this.state;
+
+		const isSwap = isItemExist({
+			items,
+			row: dropCell.row,
+			order: dropCell.order,
+		});
+
+		if (isSwap) {
+			return false;
+		}
+
+		return canDrop({
+			items,
+			dropCell,
+			dragItem,
+		});
+	}
+	setDraggingState = (dragging) => {
+		this.setState({
+			dragging: dragging
+		});
+	}
+	setDraggingCell = async (metaData) => {
+		await this.setState({
+			dragItem: metaData
+		});
+	}
+	updatePosition = (dropItem) => {
+		const { dragItem, items } = this.state;
+
+		if (isItem({ sourceItem: dropItem, matchItem: dragItem }) && !dropItem.isRowGhost) {
+			return;
+		}
+
+		const newItems = updatePosition({
+			items,
+			dropItem,
+			dragItem
+		});
+
+		this.setState({
+			items: newItems
+		});
+
+		this.updateRowsCount();
+	}
 
 	constructor(props) {
 		super(props);
@@ -88,59 +136,6 @@ export default class extends Component {
 
 	componentDidMount() {
 		console.log('%c¯\\_(ツ)_/¯', 'font-size: 66px; color: #37b24d');
-	}
-
-
-	canDropTo = (dropCell) => {
-		const { dragItem, items } = this.state;
-
-		const isSwap = isItemExist({
-			items,
-			row: dropCell.row,
-			order: dropCell.order,
-		});
-
-		if (isSwap) {
-			return false;
-		}
-
-		return canDrop({
-			items,
-			dropCell,
-			dragItem,
-		});
-	}
-
-	setDraggingState = (dragging) => {
-		this.setState({
-			dragging: dragging
-		});
-	}
-
-	setDraggingCell = async (metaData) => {
-		await this.setState({
-			dragItem: metaData
-		});
-	}
-
-	updatePosition = (dropItem) => {
-		const { dragItem, items } = this.state;
-
-		if (isItem({ sourceItem: dropItem, matchItem: dragItem }) && !dropItem.isRowGhost) {
-			return;
-		}
-
-		const newItems = updatePosition({
-			items,
-			dropItem,
-			dragItem
-		});
-
-		this.setState({
-			items: newItems
-		});
-
-		this.updateRowsCount();
 	}
 
 	updateRowsCount() {
@@ -195,29 +190,7 @@ export default class extends Component {
 		);
 	}
 
-	getPlaceholderItemCell(row, order) {
-		order = order + 0.5;
-
-		const cellKey = `${row}_${order}`;
-
-		return (
-			<BoardCell
-				key={cellKey}
-				order={order}
-				row={row}
-				size={1}
-				canDropTo={this.canDropTo}
-				updatePosition={this.updatePosition}
-				dragItem={this.state.dragItem}
-				isCellGhost={true}
-			></BoardCell>
-		);
-	}
-
 	getPlaceholderRow(row) {
-		// return (
-		// 	<div></div>
-		// );
 		row = row - 0.5;
 
 		const cellKey = `${row}_${1}`;
@@ -244,9 +217,6 @@ export default class extends Component {
 		const colsCount = getRowCellsCount({ items, row });
 		let rowCapacity = 0;
 
-		cells.push(
-			this.getPlaceholderItemCell(row, 0)
-		);
 
 		for (let order = 1; order <= colsCount; order++) {
 			const cellKey = `${row}_${order}`;
@@ -261,11 +231,7 @@ export default class extends Component {
 					this.getBoardCell({ cellKey, order, row, cellSize })
 				);
 
-				if (order != colsCount) {
-					cells.push(
-						this.getPlaceholderItemCell(row, order)
-					);
-				}
+
 			}
 		}
 
@@ -274,11 +240,6 @@ export default class extends Component {
 			const cellKey = `${row}_${order}`;
 			cells.push(
 				this.getBoardCell({ cellKey, order, row, cellSize: 1 })
-			);
-		} else {
-			const order = colsCount + 1;
-			cells.push(
-				this.getPlaceholderItemCell(row, order)
 			);
 		}
 
