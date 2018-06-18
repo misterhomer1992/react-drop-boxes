@@ -1,11 +1,14 @@
 import React, { Component, Fragment } from 'react';
-import BoardCell from './BoardCell';
-import BoardRow from './BoardRow';
-import BoardComponent from './BoardComponent';
+import Cell from './Cell';
+import BoardRow from './Row';
+import DropRow from './DropRow';
+import Item from './Item';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
-import { canDrop, updatePosition } from './dropHelpers/index';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
+
+import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
+import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
 
 const boardStyles = {
 	maxWidth: '400px',
@@ -67,25 +70,7 @@ export default class extends Component {
 		],
 		dragItem: {}
 	};
-	canDropTo = (dropCell) => {
-		const { dragItem, items } = this.state;
 
-		const isSwap = isItemExist({
-			items,
-			row: dropCell.row,
-			order: dropCell.order,
-		});
-
-		if (isSwap) {
-			return false;
-		}
-
-		return canDrop({
-			items,
-			dropCell,
-			dragItem,
-		});
-	}
 	setDraggingState = (dragging) => {
 		this.setState({
 			dragging: dragging
@@ -96,14 +81,35 @@ export default class extends Component {
 			dragItem: metaData
 		});
 	}
-	updatePosition = (dropItem) => {
+
+	updatePositionOnItem = (dropItem) => {
 		const { dragItem, items } = this.state;
 
-		if (isItem({ sourceItem: dropItem, matchItem: dragItem }) && !dropItem.isRowGhost) {
+		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
 			return;
 		}
 
-		const newItems = updatePosition({
+		const newItems = updatePositionOnItem({
+			items,
+			dropItem,
+			dragItem
+		});
+
+		this.setState({
+			items: newItems
+		});
+
+		this.updateRowsCount();
+	}
+
+	updatePositionOnRow = (dropItem) => {
+		const { dragItem, items } = this.state;
+
+		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
+			return;
+		}
+
+		const newItems = updatePositionOnRow({
 			items,
 			dropItem,
 			dragItem
@@ -148,12 +154,12 @@ export default class extends Component {
 	}
 
 	getComponentMetaData({ order, row }) {
-		return this.state.items.find((boardComponentPosition) => {
-			return order === boardComponentPosition.order && row === boardComponentPosition.row;
+		return this.state.items.find((item) => {
+			return order === item.order && row === item.row;
 		});
 	}
 
-	getBoardComponent({ order, row }) {
+	getItem({ order, row }) {
 		const { items } = this.state;
 
 		if (!isItemExist({ items, order, row })) {
@@ -163,51 +169,67 @@ export default class extends Component {
 		const componentMetaData = this.getComponentMetaData({ order, row });
 
 		return (
-			<BoardComponent {...componentMetaData} setDraggingState={this.setDraggingState} setDraggingCell={this.setDraggingCell}>
+			<Item {...componentMetaData} setDraggingState={this.setDraggingState} setDraggingCell={this.setDraggingCell}>
 				id: {componentMetaData.id}
-			</BoardComponent>
+			</Item>
 		);
 	}
 
-	getBoardCell({ cellKey, order, row, cellSize }) {
+	canDropOnItem = (dropCell) => {
+		const { dragItem, items } = this.state;
+
+		return canDropOnItem({
+			items,
+			dropCell,
+			dragItem,
+		});
+	};
+
+	canDropOnRow = (dropCell) => {
+		const { dragItem, items } = this.state;
+
+		return canDropOnRow({
+			items,
+			dropCell,
+			dragItem,
+		});
+	};
+
+	getCell({ cellKey, order, row, cellSize }) {
 		return (
-			<BoardCell
+			<Cell
 				key={cellKey}
 				order={order}
 				row={row}
 				size={cellSize}
-				canDropTo={this.canDropTo}
-				updatePosition={this.updatePosition}
+				canDropTo={this.canDropOnItem}
+				updatePosition={this.updatePositionOnItem}
 				dragItem={this.state.dragItem}
 			>
 				{
-					this.getBoardComponent({
+					this.getItem({
 						order,
 						row
 					})
 				}
-			</BoardCell>
+			</Cell>
 		);
 	}
 
-	getPlaceholderRow(row) {
+	getDropRow(row) {
 		row = row - 0.5;
 
 		const cellKey = `${row}_${1}`;
 
 		return (
-			<BoardRow key={`${row}_placeholder`}>
-				<BoardCell
-					key={cellKey}
-					order={1}
-					row={row}
-					size={1}
-					canDropTo={this.canDropTo}
-					updatePosition={this.updatePosition}
-					dragItem={this.state.dragItem}
-					isRowGhost={true}
-				></BoardCell>
-			</BoardRow>
+			<DropRow
+				key={cellKey}
+				order={1}
+				row={row}
+				canDropTo={this.canDropOnRow}
+				updatePosition={this.updatePositionOnRow}
+				dragItem={this.state.dragItem}
+			/>
 		);
 	}
 
@@ -228,7 +250,7 @@ export default class extends Component {
 				rowCapacity += cellSize;
 
 				cells.push(
-					this.getBoardCell({ cellKey, order, row, cellSize })
+					this.getCell({ cellKey, order, row, cellSize })
 				);
 
 
@@ -239,13 +261,13 @@ export default class extends Component {
 			const order = colsCount + 1;
 			const cellKey = `${row}_${order}`;
 			cells.push(
-				this.getBoardCell({ cellKey, order, row, cellSize: 1 })
+				this.getCell({ cellKey, order, row, cellSize: 1 })
 			);
 		}
 
 		return (
 			<Fragment key={row}>
-				{!isLast && this.getPlaceholderRow(row)}
+				{!isLast && this.getDropRow(row)}
 				<BoardRow>
 					{cells}
 				</BoardRow>

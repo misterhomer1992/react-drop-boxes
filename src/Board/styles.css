@@ -13,10 +13,6 @@
     margin-bottom: 1px;
 }
 
-.board__cell--hr-ghost {
-    height: 20px;
-}
-
 .board__cell--vr-ghost {
     width: 20px;
     height: 70px;
@@ -30,4 +26,14 @@
     height: 20px;
     background-color: #dbe4ff;
     border: 1px dashed #748ffc;
+}
+
+.board__row {
+    width: 300px;
+    display: flex;
+}
+
+.board__drop-row {
+    width: 300px;
+    height: 20px;
 }

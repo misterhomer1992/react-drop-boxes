@@ -147,9 +147,20 @@ const moveItem = (items, { dragItem, dropItem }) => {
     });
 };
 
-export const normalCanDrop = (params) => {
-    const result = areAllRulesIsValid(rules, params);
-    return result;
+export const canDropOnItem = (params) => {
+    const { items, dropCell } = params;
+
+    const isSwap = isItemExist({
+        items,
+        row: dropCell.row,
+        order: dropCell.order,
+    });
+
+    if (isSwap) {
+        return false;
+    }
+
+    return areAllRulesIsValid(rules, params);
 };
 
 export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
@@ -163,7 +174,7 @@ export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
     return items;
 }
 
-export const updateNormalItemsPosition = ({ dragItem, dropItem, items }) => {
+export const updatePositionOnItem = ({ dragItem, dropItem, items }) => {
     items = moveItem(items, {
         dragItem,
         dropItem

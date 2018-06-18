@@ -27,6 +27,12 @@ const getItem = ({ items, order, row }) => {
     });
 };
 
+const getItemById = ({ items, order, row }) => {
+    return items.find((boardComponentPosition) => {
+        return order === boardComponentPosition.order && row === boardComponentPosition.row;
+    });
+};
+
 const getEmptyRows = ({ items }) => {
     const rowsCount = getRowsCount({ items });
     const emptyRows = [];

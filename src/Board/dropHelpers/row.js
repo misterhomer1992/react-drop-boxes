@@ -8,34 +8,25 @@ import {
     getRowCellsCount
 } from '../itemHelpers';
 
-import { normalizeNormalMove } from './normal';
+import { normalizeNormalMove } from './item';
 
 const rules = [
     {
-        name: 'size drop item fit',
+        name: 'not a single item in row',
         off: false,
         fn: ({ items, dropCell, dragItem }) => {
-            return true;
+            const rowItemsCount = getRowCellsCount({
+                items,
+                row: dragItem.row
+            }) - 1;
+            const hasItemsInRow = rowItemsCount !== 0;
+            const currentRow = dragItem.row;
+            const isSiblingRow = dropCell.row + 0.5 === currentRow || dropCell.row - 0.5 === currentRow;
+
+            return (isSiblingRow && hasItemsInRow) || (!isSiblingRow && !hasItemsInRow);
         }
     },
 ];
-
-const areAllRulesIsValid = (rules, params) => {
-    return rules.every((rule) => {
-        //we can switch any rule
-        if (typeof rule.off !== 'undefined' && rule.off) {
-            return true;
-        }
-
-        const result = rule.fn(params);
-
-        if (!result) {
-            //console.log(`%cDrop on:${rule.name}`, 'color: red');
-        }
-
-        return result;
-    });
-};
 
 const normalizeRows = (items, { dropItem, dragItem }) => {
     const dropItemRow = dropItem.row + 0.5;
@@ -50,12 +41,6 @@ const normalizeRows = (items, { dropItem, dragItem }) => {
             row: item.row + 1
         }
     });
-};
-
-export const ghostCanDrop = (params) => {
-    const result = areAllRulesIsValid(rules, params);
-
-    return result;
 };
 
 const moveItem = (items, { dragItem, dropItem }) => {
@@ -79,21 +64,30 @@ const moveItem = (items, { dragItem, dropItem }) => {
     });
 };
 
-const shouldNormalizeItems = (items, { dragItem, dropItem }) => {
-    const siblingMove = dragItem.row === dropItem.row + 0.5 || dragItem.row === dropItem.row - 0.5;
-
-    if (siblingMove) {
-        const dropItemRowItemsCount = getRowCellsCount({ items, row: dragItem.row }) - 1;
-
-        if (dropItemRowItemsCount === 0) {
-            return false;
+const areAllRulesIsValid = (rules, params) => {
+    return rules.every((rule) => {
+        //we can switch any rule
+        if (typeof rule.off !== 'undefined' && rule.off) {
+            return true;
         }
-    }
 
-    return true;
+        const result = rule.fn(params);
+
+        if (!result) {
+            //console.log(`%cDrop on:${rule.name}`, 'color: red');
+        }
+
+        return result;
+    });
 };
 
-export const updateGhostItemsPosition = ({ dragItem, dropItem, items }) => {
+export const canDropOnRow = (params) => {
+    const { items, dropCell } = params;
+
+    return areAllRulesIsValid(rules, params);
+};
+
+export const updatePositionOnRow = ({ dragItem, dropItem, items }) => {
     items = moveItem(items, {
         dragItem,
         dropItem

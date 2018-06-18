@@ -45,7 +45,7 @@ const getBoardCellBackgroundColor = ({ canDrop, isOver }) => {
 };
 
 @DropTarget('cell', squareTarget, collect)
-class BoardCell extends Component {
+class Cell extends Component {
 	render () {
 		const { connectDropTarget, isOver, canDrop, size, dragItem, isRowGhost, isCellGhost } = this.props;
 
@@ -80,10 +80,10 @@ class BoardCell extends Component {
 	}
 }
 
-BoardCell.defaultProps = {
+Cell.defaultProps = {
 	size: 1,
 	isRowGhost: false,
 	isCellGhost: false
 };
 
-export default BoardCell;
+export default Cell;
