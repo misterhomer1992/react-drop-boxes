@@ -4,38 +4,44 @@ import classnames from 'classnames';
 
 const squareTarget = {
 	canDrop (props, monitor) {
-		const { order, row, isRowGhost, isCellGhost } = props;
-
-		//console.log(monitor.getClientOffset());
+		const { order, row } = props;
 
 		return props.canDropTo({
 			order,
-			row,
-			isRowGhost,
-			isCellGhost
+			row
 		});
 	},
 
 	drop (props, monitor) {
-		const { order, row, updatePosition, isRowGhost, isCellGhost } = props;
+		const { order, row, updatePosition } = props;
 
 		updatePosition({
 			order,
-			row,
-			isRowGhost,
-			isCellGhost
+			row
 		})
+	},
+
+	hover (props, monitor, component) {
+		const { order, row, hoverOnItem } = props;
+
+		hoverOnItem({
+			dropCell: {
+				order,
+				row
+			},
+			component,
+			clientOffset: monitor.getClientOffset()
+		});
 	}
 };
 
 function collect (connect, monitor) {
-	//console.log(monitor.getItem())
 	return {
 		connectDropTarget: connect.dropTarget(),
 		isOver: monitor.isOver(),
 		canDrop: monitor.canDrop(),
 		getDropResult: monitor.getDropResult,
-		sourceClientOffset: monitor.getSourceClientOffset()
+		clientOffset: monitor.getClientOffset()
 	};
 }
 

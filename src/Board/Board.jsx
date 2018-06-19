@@ -6,8 +6,9 @@ import Item from './Item';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
+import { DragLayer } from 'react-dnd';
 
-import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
+import { canDropOnItem, updatePositionOnItem, hoverOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
 
 const boardStyles = {
@@ -217,6 +218,18 @@ export default class extends Component {
 		});
 	};
 
+	hoverOnItem = ({dropCell, component, clientOffset}) => {
+		const { dragItem, items } = this.state;
+
+		return hoverOnItem({
+			items,
+			dropCell,
+			dragItem,
+			component,
+			clientOffset
+		});
+	};
+
 	canDropOnRow = (dropCell) => {
 		const { dragItem, items } = this.state;
 
@@ -235,6 +248,7 @@ export default class extends Component {
 				row={row}
 				size={cellSize}
 				canDropTo={this.canDropOnItem}
+				hoverOnItem={this.hoverOnItem}
 				updatePosition={this.updatePositionOnItem}
 				dragItem={this.state.dragItem}
 			>
@@ -321,8 +335,6 @@ export default class extends Component {
 	}
 
 	render() {
-		//console.table(this.state.items);
-
 		return (
 			<div className='board' style={boardStyles}>
 				{
