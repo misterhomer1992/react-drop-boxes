@@ -30,7 +30,7 @@ const rules = [
                 return true;
             }
 
-            return isLastItemInRow({
+            return !isLastItemInRow({
                 items,
                 row: dragItem.row,
                 order: dragItem.order
@@ -45,7 +45,7 @@ const rules = [
                 return true;
             }
 
-            const rowCellsCount = getRowCellsCount({ items, row: dragItem.row }) - 1;
+            const rowCellsCount = getRowCellsCount({ items, row: dropCell.row });
             const allowMove = rowCellsCount !== 0;
 
             return allowMove;
@@ -192,24 +192,6 @@ export const canDropOnItem = (params) => {
 
     return areAllRulesIsValid(rules, params);
 };
-
-export const hoverOnItem = (params) => {
-    const { component, clientOffset } = params;
-
-    const hoverBoundingRect = findDOMNode(component).getBoundingClientRect();
-    const componentWidth = hoverBoundingRect.right - hoverBoundingRect.left;
-    const hoverMiddleX = componentWidth / 2;
-    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
-    const hoverClientXPercentage = hoverClientX * 100 / componentWidth;
-
-    if (hoverClientXPercentage < 20) {
-        console.log('move left')
-    }
-
-    if (hoverClientXPercentage > 80) {
-        console.log('move right')
-    }
-}
 
 export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
     items = normalizeOrder(items, {

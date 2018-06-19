@@ -24,7 +24,11 @@ const isItem = ({ sourceItem, matchItem, }) => {
 const isLastItemInRow = ({ items, order, row }) => {
     const rowItems = getRowItems({ items, row });
 
-    return rowItems.some((item) => {
+    if (rowItems.length === 1) {
+        return true;
+    }
+
+    return !rowItems.some((item) => {
         return order < item.order;
     });
 };

@@ -8,8 +8,9 @@ import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpe
 import './styles.css';
 import { DragLayer } from 'react-dnd';
 
-import { canDropOnItem, updatePositionOnItem, hoverOnItem } from './dropHelpers/item';
+import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
+import { getHoverDropItem } from './dropHelpers/itemHover';
 
 const boardStyles = {
 	maxWidth: '400px',
@@ -218,16 +219,18 @@ export default class extends Component {
 		});
 	};
 
-	hoverOnItem = ({dropCell, component, clientOffset}) => {
+	hoverOnItem = ({ dropCell, component, clientOffset }) => {
 		const { dragItem, items } = this.state;
 
-		return hoverOnItem({
+		const dropInfo = getHoverDropItem({
 			items,
 			dropCell,
 			dragItem,
 			component,
 			clientOffset
 		});
+
+		console.log(dropInfo.allowDrop);
 	};
 
 	canDropOnRow = (dropCell) => {
