@@ -29,6 +29,7 @@ const squareTarget = {
 };
 
 function collect (connect, monitor) {
+	//console.log(monitor.getItem())
 	return {
 		connectDropTarget: connect.dropTarget(),
 		isOver: monitor.isOver(),

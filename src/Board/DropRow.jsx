@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { DropTarget } from 'react-dnd';
-import classnames from 'classnames';
 
 const squareTarget = {
 	canDrop (props, monitor) {

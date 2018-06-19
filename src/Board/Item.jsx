@@ -28,7 +28,8 @@ const cellSource = {
 const cellCollect = (connect, monitor) => {
     return {
         connectDragSource: connect.dragSource(),
-        isDragging: monitor.isDragging()
+        isDragging: monitor.isDragging(),
+        draggingId: monitor.getItem()
     }
 };
 
@@ -36,7 +37,7 @@ const cellCollect = (connect, monitor) => {
 export default class extends Component {
 
     render() {
-        const { isDragging } = this.props;
+        const { isDragging, draggingId } = this.props;
 
         const componentStyle = {
             position: 'absolute',

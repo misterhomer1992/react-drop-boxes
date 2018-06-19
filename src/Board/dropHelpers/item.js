@@ -1,4 +1,4 @@
-import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows } from '../itemHelpers';
+import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow } from '../itemHelpers';
 
 const rules = [
     {
@@ -19,6 +19,21 @@ const rules = [
             }, dragItem.size);
 
             return totalRowItemsSize <= 3;
+        }
+    },
+    {
+        name: 'deny move for last item to placeholder in one row',
+        off: false,
+        fn: ({ items, dropCell, dragItem }) => {
+            if (dragItem.row !== dropCell.row) {
+                return true;
+            }
+            
+            return isLastItemInRow({
+                items,
+                row: dragItem.row,
+                order: dragItem.order
+            });
         }
     },
 ];

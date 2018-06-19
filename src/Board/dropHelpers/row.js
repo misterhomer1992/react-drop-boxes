@@ -1,10 +1,6 @@
 import {
     isItem,
     getItem,
-    getNextItemsInRow,
-    isItemExist,
-    getRowItems,
-    getEmptyRows,
     getRowCellsCount
 } from '../itemHelpers';
 
@@ -23,7 +19,11 @@ const rules = [
             const currentRow = dragItem.row;
             const isSiblingRow = dropCell.row + 0.5 === currentRow || dropCell.row - 0.5 === currentRow;
 
-            return (isSiblingRow && hasItemsInRow) || (!isSiblingRow && !hasItemsInRow);
+            if (!isSiblingRow) {
+                return true;
+            }
+
+            return hasItemsInRow;
         }
     },
 ];
@@ -82,8 +82,6 @@ const areAllRulesIsValid = (rules, params) => {
 };
 
 export const canDropOnRow = (params) => {
-    const { items, dropCell } = params;
-
     return areAllRulesIsValid(rules, params);
 };
 

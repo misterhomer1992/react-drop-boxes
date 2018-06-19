@@ -21,15 +21,23 @@ const isItem = ({ sourceItem, matchItem, }) => {
     return sourceItem.order === matchItem.order && sourceItem.row === matchItem.row;
 };
 
+const isLastItemInRow = ({ items, order, row }) => {
+    const rowItems = getRowItems({ items, row });
+
+    return rowItems.some((item) => {
+        return order < item.order;
+    });
+};
+
 const getItem = ({ items, order, row }) => {
     return items.find((boardComponentPosition) => {
         return order === boardComponentPosition.order && row === boardComponentPosition.row;
     });
 };
 
-const getItemById = ({ items, order, row }) => {
+const getItemById = ({ items, id }) => {
     return items.find((boardComponentPosition) => {
-        return order === boardComponentPosition.order && row === boardComponentPosition.row;
+        return id === boardComponentPosition.id;
     });
 };
 
@@ -71,7 +79,9 @@ export {
     getRowCellsCount,
     getNextItemsInRow,
     getRowItems,
+    getItemById,
     isItemExist,
     isItem,
+    isLastItemInRow,
     getEmptyRows
 };
