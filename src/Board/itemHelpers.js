@@ -29,6 +29,12 @@ const isLastItemInRow = ({ items, order, row }) => {
     });
 };
 
+const isLastRow = ({ items, row }) => {
+    return !items.some((item) => {
+        return item.row > row;
+    });
+};
+
 const getItem = ({ items, order, row }) => {
     return items.find((boardComponentPosition) => {
         return order === boardComponentPosition.order && row === boardComponentPosition.row;
@@ -82,6 +88,7 @@ export {
     getItemById,
     isItemExist,
     isItem,
+    isLastRow,
     isLastItemInRow,
     getEmptyRows
 };

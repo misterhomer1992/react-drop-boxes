@@ -1,4 +1,4 @@
-import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow } from '../itemHelpers';
+import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount } from '../itemHelpers';
 
 const rules = [
     {
@@ -28,12 +28,26 @@ const rules = [
             if (dragItem.row !== dropCell.row) {
                 return true;
             }
-            
+
             return isLastItemInRow({
                 items,
                 row: dragItem.row,
                 order: dragItem.order
             });
+        }
+    },
+    {
+        name: 'deny move in last row for single item',
+        off: false,
+        fn: ({ items, dropCell, dragItem }) => {
+            if (!isLastRow({ items, row: dragItem.row })) {
+                return true;
+            }
+
+            const rowCellsCount = getRowCellsCount({ items, row: dragItem.row }) - 1;
+            const allowMove = rowCellsCount !== 0;
+
+            return allowMove;
         }
     },
 ];
