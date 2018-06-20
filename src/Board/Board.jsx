@@ -10,7 +10,7 @@ import { DragLayer } from 'react-dnd';
 
 import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
-import { getHoverDropItem } from './dropHelpers/itemHover';
+import { getHoverDropItem, moveItemOnHover } from './dropHelpers/itemHover';
 
 const boardStyles = {
 	maxWidth: '400px',
@@ -31,12 +31,6 @@ export default class extends Component {
 				type: CANVAS_COMPONENT,
 				row: 1,
 				order: 1,
-				size: 1
-			},
-			{
-				type: CANVAS_COMPONENT,
-				row: 1,
-				order: 2,
 				size: 2
 			},
 			{
@@ -47,14 +41,20 @@ export default class extends Component {
 			},
 			{
 				type: CANVAS_COMPONENT,
-				row: 3,
-				order: 1,
+				row: 2,
+				order: 2,
+				size: 1
+			},
+			{
+				type: CANVAS_COMPONENT,
+				row: 2,
+				order: 3,
 				size: 1
 			},
 			{
 				type: CANVAS_COMPONENT,
 				row: 3,
-				order: 2,
+				order: 1,
 				size: 1
 			},
 			{
@@ -230,7 +230,17 @@ export default class extends Component {
 			clientOffset
 		});
 
-		console.log(dropInfo.allowDrop);
+		if (!dropInfo.allowDrop) {
+			return;
+		}
+
+		const { direction } = dropInfo;
+
+		const newItems = moveItemOnHover({items, dropCell, dragItem, direction});
+
+		this.setState({
+			items: newItems
+		});
 	};
 
 	canDropOnRow = (dropCell) => {

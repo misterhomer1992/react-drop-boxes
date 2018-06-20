@@ -64,25 +64,17 @@ const rules = [
         name: 'if last item in row with right insertion',
         off: false,
         fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
+            if (dropCell.row === dragItem.row) {
+                return true;
+            }
+
             if (!isLastItemInRow({ items, row: dropCell.row, order: dropCell.order })) {
                 return true;
             }
 
             return direction !== DROP_DIRECTIONS.RIGHT;
         }
-    },
-    // {
-    //     name: 'check right drop direction',
-    //     off: false,
-    //     fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
-    //         console.log(dropCell)
-    //         if (direction === DROP_DIRECTIONS.LEFT) {
-    //             return true;
-    //         }
-
-    //         return true;
-    //     }
-    // }
+    }
 ];
 
 const areAllRulesIsValid = (rules, params) => {
@@ -95,7 +87,7 @@ const areAllRulesIsValid = (rules, params) => {
         const result = rule.fn(params);
 
         if (!result) {
-            //console.log(`%cDrop on:${rule.name}`, 'color: red');
+            console.log(`%cDrop on: %c${rule.name}`, 'font-weight: bold', 'color: red');
         }
 
         return result;
@@ -132,4 +124,46 @@ export const getHoverDropItem = (params) => {
         allowDrop,
         direction
     };
+};
+
+const moveItem = (items, { dragItem, dropCell, direction }) => {
+    return items.map((item) => {
+        const isMatchedItem = isItem({
+            sourceItem: item,
+            matchItem: dragItem
+        });
+
+        if (!isMatchedItem) {
+            return item;
+        }
+
+        const newItem = getItem({ items, order: dragItem.order, row: dragItem.row });
+        const dragItemOrder = direction === DROP_DIRECTIONS.LEFT ?
+            dragItem.order - 1 :
+            dragItem.order + 1;
+
+        return {
+            ...newItem,
+            row: dropCell.row,
+            order: dragItemOrder,
+        };
+    });
+};
+
+const normalizeMove = (items) => {
+    
+};
+
+export const moveItemOnHover = ({ dragItem, dropCell, items, direction }) => {
+    items = moveItem(items, {
+        dragItem,
+        dropCell,
+        direction
+    });
+
+    items = normalizeMove(items, { dragItem, dropCell, direction });
+
+    console.table(items);
+
+    return items;
 };
