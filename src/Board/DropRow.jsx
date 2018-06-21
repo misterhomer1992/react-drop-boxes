@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { DropTarget } from 'react-dnd';
+import classnames from 'classnames';
 
 const squareTarget = {
 	canDrop (props, monitor) {
@@ -42,12 +43,21 @@ class BoardCell extends Component {
 	render () {
 		const { connectDropTarget, isOver, canDrop } = this.props;
 
-		var boardCellStyles = {
-			backgroundColor: canDrop && isOver ? '#fcc419' : ''
+		const isActive = canDrop && isOver;
+		const boardCellStyles = {
+			backgroundColor: isActive ? '#fcc419' : ''
 		};
 
+		const compoenntClasses = classnames(
+			'board__drop-row',
+			{
+				'board__drop-row--over': isActive
+			}
+		);
+
+
 		return connectDropTarget(
-			<div className='board__drop-row' style={boardCellStyles}>
+			<div className={compoenntClasses} style={boardCellStyles}>
 				{this.props.children}
 			</div>
 		);

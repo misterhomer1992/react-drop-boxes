@@ -20,7 +20,7 @@ const cellSource = {
         return { id };
     },
 
-    endDrag(props) {
+    endDrag(props, monitor) {
         props.setDraggingState(false);
     }
 };
@@ -51,6 +51,8 @@ export default class extends Component {
             backgroundColor: isDragging ? '#a5d8ff' : '#4dabf7',
             boxShadow: isDragging ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
         };
+
+        console.log(this.props.isDragging)
 
         return (
             this.props.connectDragSource(

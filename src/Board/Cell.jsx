@@ -18,7 +18,7 @@ const squareTarget = {
 		updatePosition({
 			order,
 			row
-		})
+		});
 	},
 
 	hover (props, monitor, component) {

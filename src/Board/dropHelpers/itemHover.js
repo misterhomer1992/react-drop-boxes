@@ -1,5 +1,5 @@
 import { findDOMNode } from 'react-dom'
-import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount } from '../itemHelpers';
+import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount, itemHaveBothSiblings } from '../itemHelpers';
 
 const DROP_DIRECTIONS = {
     RIGHT: 'RIGHT',
@@ -105,9 +105,9 @@ export const getHoverDropItem = (params) => {
     let direction;
     let allowDrop = true;
 
-    if (hoverClientXPercentage < 25) {
+    if (hoverClientXPercentage < 30) {
         direction = DROP_DIRECTIONS.LEFT;
-    } else if (hoverClientXPercentage > 75) {
+    } else if (hoverClientXPercentage > 70) {
         direction = DROP_DIRECTIONS.RIGHT;
     } else {
         allowDrop = false;
@@ -142,11 +142,11 @@ const moveItem = (items, { dragItem, dropCell, direction }) => {
                 sourceItem: item,
                 matchItem: dragItem
             });
-    
+
             if (!isMatchedItem) {
                 return item;
             }
-    
+
             return {
                 ...item,
                 row: dropCell.row,
@@ -176,20 +176,33 @@ const normalizeHrMove = (items, { dragItem, dropCell, direction }) => {
         }
 
         let order = item.order;
+        const isItemHaveBothSiblings = itemHaveBothSiblings(dragItem);
 
         if (directionLeftToRight) {
-            if (
-                (direction === DROP_DIRECTIONS.RIGHT && item.order <= dropCell.order) ||
-                (direction === DROP_DIRECTIONS.LEFT && item.order < dropCell.order)
-            ) {
-                order -= 1;
+            if (isItemHaveBothSiblings) {
+                if (item.order > dragItem.order) {
+                    order -= 1;
+                }
+            } else {
+                if (
+                    (direction === DROP_DIRECTIONS.RIGHT && item.order <= dropCell.order) ||
+                    (direction === DROP_DIRECTIONS.LEFT && item.order < dropCell.order)
+                ) {
+                    order -= 1;
+                }
             }
         } else {
-            if (
-                (direction === DROP_DIRECTIONS.RIGHT && item.order >= dropCell.order) ||
-                (direction === DROP_DIRECTIONS.LEFT && item.order > dropCell.order)
-            ) {
-                order += 1;
+            if (isItemHaveBothSiblings) {
+                if (item.order < dragItem.order) {
+                    order += 1;
+                }
+            } else {
+                if (
+                    (direction === DROP_DIRECTIONS.RIGHT && item.order > dropCell.order) ||
+                    (direction === DROP_DIRECTIONS.LEFT && item.order >= dropCell.order)
+                ) {
+                    order += 1;
+                }
             }
         }
 
@@ -198,6 +211,25 @@ const normalizeHrMove = (items, { dragItem, dropCell, direction }) => {
             ...item,
             row: dropCell.row,
             order
+        }
+    });
+};
+
+const normalizeVrMove = (items, { dragItem, dropCell, direction }) => {
+    if (dropCell.row === dragItem.row) {
+        return items;
+    }
+
+    return items.map((item) => {
+        const shouldNormalizeItem = dropCell.row === item.row && dropCell.order <= item.order && dragItem.id !== item.id;
+
+        if (!shouldNormalizeItem) {
+            return item;
+        }
+        
+        return {
+            ...item,
+            order: item.order + 1
         }
     });
 };
@@ -217,8 +249,9 @@ export const moveItemOnHover = ({ dragItem, dropCell, items, direction }) => {
         direction
     });
 
-    items = movedData.items;   
+    items = movedData.items;
     items = normalizeHrMove(items, { dragItem, dropCell, direction });
+    items = normalizeVrMove(items, { dragItem, dropCell, direction });
 
     return {
         items: items,

@@ -37,3 +37,8 @@
     width: 300px;
     height: 20px;
 }
+
+.board__drop-row--over {
+    transition: all ease-in-out 0.3s 0.2s;
+    height: 70px;
+}

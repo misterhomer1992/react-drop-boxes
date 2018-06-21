@@ -21,6 +21,10 @@ const isItem = ({ sourceItem, matchItem, }) => {
     return sourceItem.order === matchItem.order && sourceItem.row === matchItem.row;
 };
 
+export const itemHaveBothSiblings = (item) => {
+    return item.order > 1 && item.order < 3;
+}
+
 const isLastItemInRow = ({ items, order, row }) => {
     const rowItems = getRowItems({ items, row });
 

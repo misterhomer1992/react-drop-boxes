@@ -80,23 +80,13 @@ const normalizeRows = (items) => {
     });
 };
 
-const normalizeOrderForMultipleRows = (items, { dragItem, dropItem }) => {
-    const nextItemsInRow = getNextItemsInRow({
-        items,
-        row: dragItem.row,
-        order: dragItem.order
-    });
-
-    const shouldNormalize = dragItem.row !== dropItem.row && nextItemsInRow.length > 0;
-
-    if (!shouldNormalize) {
-        return items;
-    }
-
+const normalizeOrder = (items, { dragItem, dropItem }) => {
     const rowToNormalize = dragItem.row;
 
     return items.map((item) => {
-        if (item.row !== rowToNormalize) {
+        const shouldNormalize = item.row === rowToNormalize && item.order > dragItem.order;
+
+        if (!shouldNormalize) {
             return item;
         }
 
@@ -107,36 +97,6 @@ const normalizeOrderForMultipleRows = (items, { dragItem, dropItem }) => {
             order
         }
     });
-};
-
-const normalizeOrderForSingeRow = (items, { dragItem, dropItem }) => {
-    const shouldNormalize = dragItem.row === dropItem.row;
-
-    if (!shouldNormalize) {
-        return items;
-    }
-
-    return items.map((item) => {
-        const shouldNormalizeItem = dragItem.row === item.row && item.order > dragItem.order;
-
-        if (!shouldNormalizeItem) {
-            return item;
-        }
-
-        const order = item.order - 1;
-
-        return {
-            ...item,
-            order
-        }
-    });
-};
-
-const normalizeOrder = (items, params) => {
-    items = normalizeOrderForSingeRow(items, params);
-    items = normalizeOrderForMultipleRows(items, params);
-
-    return items;
 };
 
 const areAllRulesIsValid = (rules, params) => {

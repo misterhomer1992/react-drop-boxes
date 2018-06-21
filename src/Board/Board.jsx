@@ -219,7 +219,7 @@ export default class extends Component {
 		});
 	};
 
-	hoverOnItem = ({ dropCell, component, clientOffset }) => {
+	hoverOnItem = async ({ dropCell, component, clientOffset }) => {
 		const { dragItem, items } = this.state;
 
 		const dropInfo = getHoverDropItem({
@@ -238,7 +238,13 @@ export default class extends Component {
 
 		const movedData = moveItemOnHover({items, dropCell, dragItem, direction});
 
-		this.setState(movedData);
+		await this.setState(movedData);
+
+		console.log('Items');
+		console.table(this.state.items);
+
+		console.log('dragItem');
+		console.table(this.state.dragItem);
 	};
 
 	canDropOnRow = (dropCell) => {
