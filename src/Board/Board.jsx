@@ -128,7 +128,7 @@ export default class extends Component {
 		super(props);
 
 		this.state.items = this.state.items.map((item) => {
-			const id = Math.round(Math.random().toFixed(2) * 100);
+			const id = 1000 - Math.round(Math.random().toFixed(2) * 1000);
 			return {
 				...item,
 				id
@@ -236,11 +236,9 @@ export default class extends Component {
 
 		const { direction } = dropInfo;
 
-		const newItems = moveItemOnHover({items, dropCell, dragItem, direction});
+		const movedData = moveItemOnHover({items, dropCell, dragItem, direction});
 
-		this.setState({
-			items: newItems
-		});
+		this.setState(movedData);
 	};
 
 	canDropOnRow = (dropCell) => {

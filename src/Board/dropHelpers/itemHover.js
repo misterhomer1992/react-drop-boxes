@@ -127,43 +127,101 @@ export const getHoverDropItem = (params) => {
 };
 
 const moveItem = (items, { dragItem, dropCell, direction }) => {
-    return items.map((item) => {
-        const isMatchedItem = isItem({
-            sourceItem: item,
-            matchItem: dragItem
-        });
+    const directionLeftToRight = dragItem.order < dropCell.order;
+    let itemOrder = dropCell.order;
 
-        if (!isMatchedItem) {
+    if (directionLeftToRight && direction === DROP_DIRECTIONS.LEFT) {
+        itemOrder -= 1;
+    } else if (!directionLeftToRight && direction === DROP_DIRECTIONS.RIGHT) {
+        itemOrder += 1;
+    }
+
+    return {
+        items: items.map((item) => {
+            const isMatchedItem = isItem({
+                sourceItem: item,
+                matchItem: dragItem
+            });
+    
+            if (!isMatchedItem) {
+                return item;
+            }
+    
+            return {
+                ...item,
+                row: dropCell.row,
+                order: itemOrder
+            }
+        }),
+        dragItem: {
+            ...dragItem,
+            row: dropCell.row,
+            order: itemOrder
+        }
+    }
+};
+
+const normalizeHrMove = (items, { dragItem, dropCell, direction }) => {
+    if (dropCell.row !== dragItem.row) {
+        return items;
+    }
+
+    const directionLeftToRight = dragItem.order < dropCell.order;
+
+    return items.map((item) => {
+        const shouldNormalizeItem = dragItem.row === item.row && dragItem.id !== item.id;
+
+        if (!shouldNormalizeItem) {
             return item;
         }
 
-        const newItem = getItem({ items, order: dragItem.order, row: dragItem.row });
-        const dragItemOrder = direction === DROP_DIRECTIONS.LEFT ?
-            dragItem.order - 1 :
-            dragItem.order + 1;
+        let order = item.order;
+
+        if (directionLeftToRight) {
+            if (
+                (direction === DROP_DIRECTIONS.RIGHT && item.order <= dropCell.order) ||
+                (direction === DROP_DIRECTIONS.LEFT && item.order < dropCell.order)
+            ) {
+                order -= 1;
+            }
+        } else {
+            if (
+                (direction === DROP_DIRECTIONS.RIGHT && item.order >= dropCell.order) ||
+                (direction === DROP_DIRECTIONS.LEFT && item.order > dropCell.order)
+            ) {
+                order += 1;
+            }
+        }
+
 
         return {
-            ...newItem,
+            ...item,
             row: dropCell.row,
-            order: dragItemOrder,
-        };
+            order
+        }
     });
 };
 
-const normalizeMove = (items) => {
-    
+const normalizeDragItem = (dragItem, { dropCell, direction }) => {
+    return {
+        ...dragItem,
+        row: dropCell.row,
+        order: dropCell.order
+    }
 };
 
 export const moveItemOnHover = ({ dragItem, dropCell, items, direction }) => {
-    items = moveItem(items, {
+    const movedData = moveItem(items, {
         dragItem,
         dropCell,
         direction
     });
 
-    items = normalizeMove(items, { dragItem, dropCell, direction });
+    items = movedData.items;   
+    items = normalizeHrMove(items, { dragItem, dropCell, direction });
 
-    console.table(items);
-
-    return items;
+    return {
+        items: items,
+        dragItem: movedData.dragItem
+    };
 };
