@@ -1,5 +1,6 @@
 import { findDOMNode } from 'react-dom'
 import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount, itemHaveBothSiblings } from '../itemHelpers';
+import { normalizeNormalMove } from './item';
 
 const DROP_DIRECTIONS = {
     RIGHT: 'RIGHT',
@@ -105,9 +106,9 @@ export const getHoverDropItem = (params) => {
     let direction;
     let allowDrop = true;
 
-    if (hoverClientXPercentage < 30) {
+    if (hoverClientXPercentage < 35) {
         direction = DROP_DIRECTIONS.LEFT;
-    } else if (hoverClientXPercentage > 70) {
+    } else if (hoverClientXPercentage > 65) {
         direction = DROP_DIRECTIONS.RIGHT;
     } else {
         allowDrop = false;
@@ -220,18 +221,20 @@ const normalizeVrMove = (items, { dragItem, dropCell, direction }) => {
         return items;
     }
 
-    return items.map((item) => {
+    items = items.map((item) => {
         const shouldNormalizeItem = dropCell.row === item.row && dropCell.order <= item.order && dragItem.id !== item.id;
 
         if (!shouldNormalizeItem) {
             return item;
         }
-        
+
         return {
             ...item,
             order: item.order + 1
         }
     });
+
+    return normalizeNormalMove(items, { dragItem, dropCell });
 };
 
 const normalizeDragItem = (dragItem, { dropCell, direction }) => {

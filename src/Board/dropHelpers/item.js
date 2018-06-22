@@ -80,11 +80,9 @@ const normalizeRows = (items) => {
     });
 };
 
-const normalizeOrder = (items, { dragItem, dropItem }) => {
-    const rowToNormalize = dragItem.row;
-
+export const normalizeOrder = (items, { dragItem, dropItem }) => {
     return items.map((item) => {
-        const shouldNormalize = item.row === rowToNormalize && item.order > dragItem.order;
+        const shouldNormalize = item.row === dragItem.row && item.order > dragItem.order;
 
         if (!shouldNormalize) {
             return item;

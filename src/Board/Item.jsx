@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { DragSource } from 'react-dnd';
+import classnames from 'classnames';
 
 const cellSource = {
     beginDrag(props, monitor, component) {
@@ -28,7 +29,6 @@ const cellSource = {
 const cellCollect = (connect, monitor) => {
     return {
         connectDragSource: connect.dragSource(),
-        isDragging: monitor.isDragging(),
         draggingId: monitor.getItem()
     }
 };
@@ -37,26 +37,20 @@ const cellCollect = (connect, monitor) => {
 export default class extends Component {
 
     render() {
-        const { isDragging, draggingId } = this.props;
+        const { draggingId, isDragItem } = this.props;
 
         const componentStyle = {
-            position: 'absolute',
-            left: '0',
-            top: '0',
-            right: '0',
-            bottom: '0',
-            lineHeight: 3.5,
-            transition: 'all ease 0.3s',
-            transform: isDragging ? 'scale(0.6)' : 'scale(1)',
-            backgroundColor: isDragging ? '#a5d8ff' : '#4dabf7',
-            boxShadow: isDragging ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
+            transform: isDragItem ? 'scale(0.6)' : 'scale(1)',
+            backgroundColor: isDragItem ? '#a5d8ff' : '#4dabf7',
+            boxShadow: isDragItem ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
         };
-
-        console.log(this.props.isDragging)
+        const componentClasses = classnames('board__item', {
+            'board__item--fade-in': isDragItem
+        });
 
         return (
             this.props.connectDragSource(
-                <div style={componentStyle}>
+                <div className={componentClasses} style={componentStyle}>
                     {this.props.children}
                 </div>
             )
