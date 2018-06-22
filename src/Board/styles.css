@@ -29,16 +29,47 @@
 }
 
 .board__row {
-    width: 300px;
+    width: 100%;
     display: flex;
 }
 
 .board__drop-row {
-    width: 300px;
+    width: 100%;
     height: 20px;
+    transition: all ease-in-out 0.3s 0.15s;
 }
 
 .board__drop-row--over {
-    transition: all ease-in-out 0.3s 0.2s;
     height: 70px;
+}
+
+.board__item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    line-height: 3.5;
+    transition: all ease 0.3s;
+}
+
+.board__item--fade-in {
+    animation-name: board__item---fade-in;
+    animation-delay: 0s;
+    animation-duration: 0.4s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes board__item---fade-in {
+    10% {
+        transform: scale(0.2);
+    }
+
+    45% {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(0.6);
+    }
 }

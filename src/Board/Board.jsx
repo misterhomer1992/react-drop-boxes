@@ -7,13 +7,14 @@ import { CANVAS_COMPONENT } from './BoardComponentTypes';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
 import { DragLayer } from 'react-dnd';
+import { throttle } from 'lodash';
 
 import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
 import { getHoverDropItem, moveItemOnHover } from './dropHelpers/itemHover';
 
 const boardStyles = {
-	maxWidth: '400px',
+	maxWidth: '640px',
 	margin: '100px auto',
 	position: 'relative'
 };
@@ -74,8 +75,15 @@ export default class extends Component {
 	};
 
 	setDraggingState = (dragging) => {
+		let { dragItem } = this.state;
+
+		if (!dragging) {
+			dragItem = {};
+		}
+
 		this.setState({
-			dragging: dragging
+			dragging: dragging,
+			dragItem
 		});
 	}
 	setDraggingCell = async (metaData) => {
@@ -84,7 +92,7 @@ export default class extends Component {
 		});
 	}
 
-	updatePositionOnItem = (dropItem) => {
+	updatePositionOnItem = async (dropItem) => {
 		const { dragItem, items } = this.state;
 
 		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
@@ -97,14 +105,19 @@ export default class extends Component {
 			dragItem
 		});
 
-		this.setState({
-			items: newItems
+		await this.setState({
+			items: newItems,
+			dragItem: {
+				...dragItem,
+				row: dropItem.row,
+				order: dropItem.order
+			}
 		});
 
 		this.updateRowsCount();
 	}
 
-	updatePositionOnRow = (dropItem) => {
+	updatePositionOnRow = async (dropItem) => {
 		const { dragItem, items } = this.state;
 
 		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
@@ -117,7 +130,7 @@ export default class extends Component {
 			dragItem
 		});
 
-		this.setState({
+		await this.setState({
 			items: newItems
 		});
 
@@ -128,7 +141,8 @@ export default class extends Component {
 		super(props);
 
 		this.state.items = this.state.items.map((item) => {
-			const id = 1000 - Math.round(Math.random().toFixed(2) * 1000);
+			const id = Math.floor(Math.random() * 301);
+
 			return {
 				...item,
 				id
@@ -201,9 +215,10 @@ export default class extends Component {
 		}
 
 		const componentMetaData = this.getComponentMetaData({ order, row });
+		const isDragItem = this.state.dragItem.id === componentMetaData.id;
 
 		return (
-			<Item {...componentMetaData} setDraggingState={this.setDraggingState} setDraggingCell={this.setDraggingCell}>
+			<Item {...componentMetaData} setDraggingState={this.setDraggingState} setDraggingCell={this.setDraggingCell} isDragItem={isDragItem}>
 				id: {componentMetaData.id}
 			</Item>
 		);
@@ -219,32 +234,34 @@ export default class extends Component {
 		});
 	};
 
-	hoverOnItem = async ({ dropCell, component, clientOffset }) => {
+	hoverOnItem = ({ dropCell, component, clientOffset }) => {
 		const { dragItem, items } = this.state;
 
-		const dropInfo = getHoverDropItem({
-			items,
-			dropCell,
-			dragItem,
-			component,
-			clientOffset
-		});
+		const _isItemExist = isItemExist({ items, order: dropCell.order, row: dropCell.row });
 
-		if (!dropInfo.allowDrop) {
-			return;
+		if (_isItemExist) {
+			const dropInfo = getHoverDropItem({
+				items,
+				dropCell,
+				dragItem,
+				component,
+				clientOffset
+			});
+
+			if (!dropInfo.allowDrop) {
+				return;
+			}
+
+			const { direction } = dropInfo;
+
+			const movedData = moveItemOnHover({ items, dropCell, dragItem, direction });
+
+			this.setState(movedData);
+		} else {
+			if (this.canDropOnItem(dropCell)) {
+				this.updatePositionOnItem(dropCell);
+			}
 		}
-
-		const { direction } = dropInfo;
-
-		const movedData = moveItemOnHover({items, dropCell, dragItem, direction});
-
-		await this.setState(movedData);
-
-		console.log('Items');
-		console.table(this.state.items);
-
-		console.log('dragItem');
-		console.table(this.state.dragItem);
 	};
 
 	canDropOnRow = (dropCell) => {

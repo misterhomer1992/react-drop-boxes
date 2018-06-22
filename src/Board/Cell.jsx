@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
+import { throttle } from 'lodash';
 
 const squareTarget = {
-	canDrop (props, monitor) {
+	canDrop(props, monitor) {
 		const { order, row } = props;
 
 		return props.canDropTo({
@@ -12,16 +13,16 @@ const squareTarget = {
 		});
 	},
 
-	drop (props, monitor) {
+	drop(props, monitor) {
 		const { order, row, updatePosition } = props;
 
-		updatePosition({
-			order,
-			row
-		});
+		// updatePosition({
+		// 	order,
+		// 	row
+		// });
 	},
 
-	hover (props, monitor, component) {
+	hover(props, monitor, component) {
 		const { order, row, hoverOnItem } = props;
 
 		hoverOnItem({
@@ -35,7 +36,7 @@ const squareTarget = {
 	}
 };
 
-function collect (connect, monitor) {
+function collect(connect, monitor) {
 	return {
 		connectDropTarget: connect.dropTarget(),
 		isOver: monitor.isOver(),
@@ -51,12 +52,23 @@ const getBoardCellBackgroundColor = ({ canDrop, isOver }) => {
 	}
 };
 
+const getCellWidth = (size) => {
+	switch (size) {
+		case 1:
+			return 200;
+		case 2:
+			return 420;
+		case 3:
+			return 640;
+	}
+}
+
 @DropTarget('cell', squareTarget, collect)
 class Cell extends Component {
-	render () {
+	render() {
 		const { connectDropTarget, isOver, canDrop, size, dragItem, isRowGhost, isCellGhost } = this.props;
 
-		let cellPercentage = 33.3333333333;
+		let cellWidth;
 
 		// if (isCellGhost) {
 		//     cellPercentage = null;
@@ -65,13 +77,14 @@ class Cell extends Component {
 		// }
 
 		if (canDrop && isOver) {
-			cellPercentage *= dragItem.size;
+			cellWidth = getCellWidth(dragItem.size)
 		} else {
-			cellPercentage *= size;
+			cellWidth = getCellWidth(size)
 		}
+
 		var boardCellStyles = {
-			backgroundColor: getBoardCellBackgroundColor({ canDrop, isOver }),
-			width: `${cellPercentage}%`
+			//backgroundColor: getBoardCellBackgroundColor({ canDrop, isOver }),
+			width: `${cellWidth}px`
 		};
 
 		const componentClasses = classnames('board__cell', {
