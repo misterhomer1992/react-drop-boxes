@@ -6,7 +6,7 @@ import { throttle } from 'lodash';
 const squareTarget = {
 	canDrop(props, monitor) {
 		const { order, row } = props;
-
+		
 		return props.canDropTo({
 			order,
 			row
@@ -16,10 +16,10 @@ const squareTarget = {
 	drop(props, monitor) {
 		const { order, row, updatePosition } = props;
 
-		// updatePosition({
-		// 	order,
-		// 	row
-		// });
+		updatePosition({
+			order,
+			row
+		});
 	},
 
 	hover(props, monitor, component) {

@@ -11,6 +11,25 @@
     box-sizing: border-box;
     height: 70px;
     margin-bottom: 1px;
+    position: relative;
+}
+
+.board__cell::before {
+    content: "";
+    width: 24px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: -20px;
+}
+
+.board__cell::after {
+    content: "";
+    width: 24px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: -20px;
 }
 
 .board__cell--vr-ghost {

@@ -158,38 +158,6 @@ export default class extends Component {
 
 	componentDidMount() {
 		console.log('%c¯\\_(ツ)_/¯', 'font-size: 66px; color: #37b24d');
-
-		const transfer = () => {
-			let dragItem = { ...this.state.dragItem };
-
-			if (!dragItem.id) {
-				return;
-			}
-
-			let items = [...this.state.items];
-
-			const dropItem = items[0];
-
-			items[0] = {
-				...dropItem,
-				row: dragItem.row,
-				order: dragItem.order
-			}
-			items[1] = {
-				...dragItem,
-				row: dropItem.row,
-				order: dropItem.order
-			};
-
-			dragItem = items[1];
-
-			this.setState({
-				items,
-				dragItem
-			});
-		};
-
-		//setTimeout(transfer, 4000);
 	}
 
 	updateRowsCount() {
@@ -248,19 +216,18 @@ export default class extends Component {
 				clientOffset
 			});
 
-			if (!dropInfo.allowDrop) {
-				return;
-			}
+			console.log(dropInfo.allowDrop, dropInfo.direction);
+			console.log(dropCell);
 
-			const { direction } = dropInfo;
+			//const { direction } = dropInfo;
 
-			const movedData = moveItemOnHover({ items, dropCell, dragItem, direction });
+			//const movedData = moveItemOnHover({ items, dropCell, dragItem, direction });
 
-			this.setState(movedData);
+			//this.setState(movedData);
 		} else {
-			if (this.canDropOnItem(dropCell)) {
-				this.updatePositionOnItem(dropCell);
-			}
+			// if (this.canDropOnItem(dropCell)) {
+			// 	this.updatePositionOnItem(dropCell);
+			// }
 		}
 	};
 
