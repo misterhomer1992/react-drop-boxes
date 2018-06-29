@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import ReactDOM from 'react-dom';
 import Cell from './Cell';
 import BoardRow from './Row';
 import DropRow from './DropRow';
@@ -7,7 +8,7 @@ import { CANVAS_COMPONENT } from './BoardComponentTypes';
 import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
 import { DragLayer } from 'react-dnd';
-import { throttle } from 'lodash';
+import PlaceholderMarker from './PlaceholderMarker';
 
 import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
@@ -21,12 +22,17 @@ const boardStyles = {
 
 export default class extends Component {
 	syncState = {
-		colsCount: 3
+		maxColsCount: 3
 	};
 
 	state = {
 		rowsCount: 1,
 		dragging: false,
+		placeholderMarker: {
+			top: 0,
+			left: 0,
+			type: null
+		},
 		items: [
 			{
 				type: CANVAS_COMPONENT,
@@ -75,15 +81,17 @@ export default class extends Component {
 	};
 
 	setDraggingState = (dragging) => {
-		let { dragItem } = this.state;
+		let { dragItem, placeholderMarker } = this.state;
 
 		if (!dragging) {
 			dragItem = {};
+			placeholderMarker = null;
 		}
 
 		this.setState({
 			dragging: dragging,
-			dragItem
+			dragItem,
+			placeholderMarker
 		});
 	}
 	setDraggingCell = async (metaData) => {
@@ -202,6 +210,30 @@ export default class extends Component {
 		});
 	};
 
+	hoverOnRow = ({ targetBoundingRect, dropCell }) => {
+		const { items, dragItem } = this.state;
+		const canDrop = canDropOnRow({
+			items,
+			dropCell,
+			dragItem,
+		});
+
+		if (!canDrop) {
+			return;
+		}
+
+		const elementBoundingReact = ReactDOM.findDOMNode(this).getBoundingClientRect();
+		const placeholderMarkerTop = targetBoundingRect.top + (targetBoundingRect.height / 2) - 2 - elementBoundingReact.top;
+
+		this.setState({
+			placeholderMarker: {
+				top: placeholderMarkerTop,
+				left: 0,
+				type: 'hr'
+			}
+		});
+	}
+
 	hoverOnItem = ({ dropCell, component, clientOffset }) => {
 		const { dragItem, items } = this.state;
 
@@ -216,8 +248,8 @@ export default class extends Component {
 				clientOffset
 			});
 
-			console.log(dropInfo.allowDrop, dropInfo.direction);
-			console.log(dropCell);
+			// console.log(dropInfo.allowDrop, dropInfo.direction);
+			// console.log(dropCell);
 
 			//const { direction } = dropInfo;
 
@@ -229,16 +261,6 @@ export default class extends Component {
 			// 	this.updatePositionOnItem(dropCell);
 			// }
 		}
-	};
-
-	canDropOnRow = (dropCell) => {
-		const { dragItem, items } = this.state;
-
-		return canDropOnRow({
-			items,
-			dropCell,
-			dragItem,
-		});
 	};
 
 	getCell({ cellKey, order, row, cellSize }) {
@@ -273,7 +295,7 @@ export default class extends Component {
 				key={cellKey}
 				order={1}
 				row={row}
-				canDropTo={this.canDropOnRow}
+				hoverOnRow={this.hoverOnRow}
 				updatePosition={this.updatePositionOnRow}
 				dragItem={this.state.dragItem}
 			/>
@@ -284,7 +306,7 @@ export default class extends Component {
 		const { items, dragging } = this.state;
 		const cells = [];
 		const colsCount = getRowCellsCount({ items, row });
-		let rowCapacity = 0;
+		let rowCellsCapacity = 0;
 
 
 		for (let order = 1; order <= colsCount; order++) {
@@ -294,7 +316,7 @@ export default class extends Component {
 				const cellKey = componentMetaData.id;
 				let cellSize = componentMetaData.size;
 
-				rowCapacity += cellSize;
+				rowCellsCapacity += cellSize;
 
 				cells.push(
 					this.getCell({ cellKey, order, row, cellSize })
@@ -303,11 +325,13 @@ export default class extends Component {
 			}
 		}
 
-		if (rowCapacity < 3) {
+		const { maxColsCount } = this.syncState;
+
+		if (rowCellsCapacity < maxColsCount) {
 			const order = colsCount + 1;
 			const cellKey = `${row}_${order}`;
 			cells.push(
-				this.getCell({ cellKey, order, row, cellSize: 1 })
+				this.getCell({ cellKey, order, row, cellSize: maxColsCount - rowCellsCapacity })
 			);
 		}
 
@@ -338,9 +362,12 @@ export default class extends Component {
 	render() {
 		return (
 			<div className='board' style={boardStyles}>
-				{
-					this.getRows()
-				}
+				<div className='board__grid'>
+					{
+						this.getRows()
+					}
+				</div>
+				{this.state.dragging && <PlaceholderMarker {...this.state.placeholderMarker} />}
 			</div>
 		);
 	}

@@ -40,12 +40,10 @@ export default class extends Component {
         const { draggingId, isDragItem } = this.props;
 
         const componentStyle = {
-            transform: isDragItem ? 'scale(0.6)' : 'scale(1)',
             backgroundColor: isDragItem ? '#a5d8ff' : '#4dabf7',
             boxShadow: isDragItem ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
         };
         const componentClasses = classnames('board__item', {
-            'board__item--fade-in': isDragItem
         });
 
         return (

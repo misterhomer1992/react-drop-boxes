@@ -1,4 +1,8 @@
 .board {
+    position: relative;
+}
+
+.board__grid {
     background-color: #f8f9fa;
     box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
     padding: 5px;
@@ -54,12 +58,8 @@
 
 .board__drop-row {
     width: 100%;
-    height: 20px;
+    height: 30px;
     transition: all ease-in-out 0.3s 0.15s;
-}
-
-.board__drop-row--over {
-    height: 70px;
 }
 
 .board__item {
@@ -91,4 +91,11 @@
     to {
         transform: scale(0.6);
     }
+}
+
+.board__hr-placeholder-marker {
+    position: absolute;
+    background-color: #4263eb;
+    height: 2px;
+    width: 640px;
 }

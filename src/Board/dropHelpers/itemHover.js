@@ -102,24 +102,11 @@ export const getHoverDropItem = (params) => {
     const componentWidth = hoverBoundingRect.right - hoverBoundingRect.left;
     const hoverMiddleX = componentWidth / 2;
     const hoverClientX = clientOffset.x - hoverBoundingRect.left;
-    const hoverClientXPercentage = hoverClientX * 100 / componentWidth;
-    let direction;
-    let allowDrop = true;
-
-    if (hoverClientXPercentage < 35) {
-        direction = DROP_DIRECTIONS.LEFT;
-    } else if (hoverClientXPercentage > 65) {
-        direction = DROP_DIRECTIONS.RIGHT;
-    } else {
-        allowDrop = false;
-    }
-
-    if (allowDrop) {
-        allowDrop = areAllRulesIsValid(rules, {
-            ...params,
-            direction
-        });
-    }
+    const direction = hoverClientX < hoverMiddleX ? DROP_DIRECTIONS.LEFT : DROP_DIRECTIONS.RIGHT;
+    const allowDrop = areAllRulesIsValid(rules, {
+        ...params,
+        direction
+    });
 
     return {
         allowDrop,

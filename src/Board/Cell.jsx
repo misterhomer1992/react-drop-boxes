@@ -76,11 +76,13 @@ class Cell extends Component {
 
 		// }
 
-		if (canDrop && isOver) {
-			cellWidth = getCellWidth(dragItem.size)
-		} else {
-			cellWidth = getCellWidth(size)
-		}
+		// if (canDrop && isOver) {
+		// 	cellWidth = getCellWidth(dragItem.size)
+		// } else {
+		// 	cellWidth = getCellWidth(size)
+		// }
+
+		cellWidth = getCellWidth(size);
 
 		var boardCellStyles = {
 			//backgroundColor: getBoardCellBackgroundColor({ canDrop, isOver }),

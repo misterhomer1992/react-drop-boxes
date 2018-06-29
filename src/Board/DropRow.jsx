@@ -1,22 +1,10 @@
 import React, { Component } from 'react';
+import { findDOMNode } from 'react-dom'
 import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 const squareTarget = {
-	canDrop (props, monitor) {
-		const { order, row, isRowGhost, isCellGhost } = props;
-
-		//console.log(monitor.getClientOffset());
-
-		return props.canDropTo({
-			order,
-			row,
-			isRowGhost,
-			isCellGhost
-		});
-	},
-
-	drop (props, monitor) {
+	drop(props, monitor) {
 		const { order, row, updatePosition, isRowGhost, isCellGhost } = props;
 
 		updatePosition({
@@ -25,10 +13,24 @@ const squareTarget = {
 			isRowGhost,
 			isCellGhost
 		})
+	},
+
+	hover(props, monitor, component) {
+		const { order, row, hoverOnRow } = props;
+		
+		const boundingRect = findDOMNode(component).getBoundingClientRect();
+
+		hoverOnRow({
+			targetBoundingRect: boundingRect,
+			dropCell: {
+				order,
+				row
+			},
+		});
 	}
 };
 
-function collect (connect, monitor) {
+function collect(connect, monitor) {
 	return {
 		connectDropTarget: connect.dropTarget(),
 		isOver: monitor.isOver(),
@@ -40,7 +42,7 @@ function collect (connect, monitor) {
 
 @DropTarget('cell', squareTarget, collect)
 class BoardCell extends Component {
-	render () {
+	render() {
 		const { connectDropTarget, isOver, canDrop } = this.props;
 
 		const isActive = canDrop && isOver;
@@ -49,15 +51,12 @@ class BoardCell extends Component {
 		};
 
 		const compoenntClasses = classnames(
-			'board__drop-row',
-			{
-				'board__drop-row--over': isActive
-			}
+			'board__drop-row'
 		);
 
 
 		return connectDropTarget(
-			<div className={compoenntClasses} style={boardCellStyles}>
+			<div className={compoenntClasses}>
 				{this.props.children}
 			</div>
 		);
