@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { findDOMNode } from 'react-dom';
 import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 import { throttle } from 'lodash';
@@ -6,31 +7,33 @@ import { throttle } from 'lodash';
 const squareTarget = {
 	canDrop(props, monitor) {
 		const { order, row } = props;
-		
+
 		return props.canDropTo({
 			order,
 			row
 		});
 	},
 
-	drop(props, monitor) {
-		const { order, row, updatePosition } = props;
+	// drop(props, monitor) {
+	// 	const { order, row, updatePosition } = props;
 
-		updatePosition({
-			order,
-			row
-		});
-	},
+	// 	updatePosition({
+	// 		order,
+	// 		row
+	// 	});
+	// },
 
 	hover(props, monitor, component) {
 		const { order, row, hoverOnItem } = props;
+
+		const cellBoundingRect = findDOMNode(component).getBoundingClientRect();
 
 		hoverOnItem({
 			dropCell: {
 				order,
 				row
 			},
-			component,
+			cellBoundingRect,
 			clientOffset: monitor.getClientOffset()
 		});
 	}

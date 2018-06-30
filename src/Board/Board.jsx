@@ -5,14 +5,16 @@ import BoardRow from './Row';
 import DropRow from './DropRow';
 import Item from './Item';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
-import { getRowsCount, isItemExist, getRowCellsCount, isItem } from './itemHelpers';
+import { getRowsCount, isItemExist as isItemExistHelper, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
 import { DragLayer } from 'react-dnd';
 import PlaceholderMarker from './PlaceholderMarker';
 
 import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
-import { getHoverDropItem, moveItemOnHover } from './dropHelpers/itemHover';
+import { canDropOnHover, getDropDirectionOnHover, moveItemOnHover } from './dropHelpers/itemHover';
+
+import { getHrPlaceholderMarkerPosition, getVrPlaceholderMarkerPosition } from './dropHelpers/placeholderMarker';
 
 const boardStyles = {
 	maxWidth: '640px',
@@ -29,9 +31,10 @@ export default class extends Component {
 		rowsCount: 1,
 		dragging: false,
 		placeholderMarker: {
-			top: 0,
-			left: 0,
-			type: null
+			type: null,
+			visible: false,
+			left: null,
+			top: null
 		},
 		items: [
 			{
@@ -80,18 +83,23 @@ export default class extends Component {
 		dragItem: {}
 	};
 
+	get elementBoundingRect() {
+		return ReactDOM.findDOMNode(this).getBoundingClientRect();
+	}
+
 	setDraggingState = (dragging) => {
-		let { dragItem, placeholderMarker } = this.state;
+		let { dragItem } = this.state;
 
 		if (!dragging) {
 			dragItem = {};
-			placeholderMarker = null;
+			this.togglePlaceholderMarker({
+				visible: false
+			})
 		}
 
 		this.setState({
 			dragging: dragging,
-			dragItem,
-			placeholderMarker
+			dragItem
 		});
 	}
 	setDraggingCell = async (metaData) => {
@@ -186,7 +194,7 @@ export default class extends Component {
 	getItem({ order, row }) {
 		const { items } = this.state;
 
-		if (!isItemExist({ items, order, row })) {
+		if (!isItemExistHelper({ items, order, row })) {
 			return null;
 		}
 
@@ -210,7 +218,24 @@ export default class extends Component {
 		});
 	};
 
-	hoverOnRow = ({ targetBoundingRect, dropCell }) => {
+	async togglePlaceholderMarker({ visible, type, top, left }) {
+		if (visible && type === 'hr') {
+			left = 0;
+		}
+
+		console.count('togglePlaceholderMarker');
+
+		await this.setState({
+			placeholderMarker: {
+				visible,
+				type,
+				top,
+				left
+			}
+		});
+	}
+
+	hoverOnRow = ({ cellBoundingRect, dropCell }) => {
 		const { items, dragItem } = this.state;
 		const canDrop = canDropOnRow({
 			items,
@@ -222,45 +247,63 @@ export default class extends Component {
 			return;
 		}
 
-		const elementBoundingReact = ReactDOM.findDOMNode(this).getBoundingClientRect();
-		const placeholderMarkerTop = targetBoundingRect.top + (targetBoundingRect.height / 2) - 2 - elementBoundingReact.top;
+		const { elementBoundingRect } = this;
+		const top = getHrPlaceholderMarkerPosition({ elementBoundingRect, cellBoundingRect });
+		const { placeholderMarker } = this.state;
 
-		this.setState({
-			placeholderMarker: {
-				top: placeholderMarkerTop,
-				left: 0,
-				type: 'hr'
-			}
+		if (placeholderMarker.top === top) {
+			return;
+		}
+
+		this.togglePlaceholderMarker({
+			visible: true,
+			type: 'hr',
+			top
 		});
 	}
 
-	hoverOnItem = ({ dropCell, component, clientOffset }) => {
+	hoverOnItem = ({ dropCell, cellBoundingRect, clientOffset }) => {
 		const { dragItem, items } = this.state;
+		const helpersParams = {
+			items,
+			dropCell,
+			dragItem,
+			cellBoundingRect,
+			clientOffset
+		};
 
-		const _isItemExist = isItemExist({ items, order: dropCell.order, row: dropCell.row });
+		const direction = getDropDirectionOnHover(helpersParams);
 
-		if (_isItemExist) {
-			const dropInfo = getHoverDropItem({
-				items,
-				dropCell,
-				dragItem,
-				component,
-				clientOffset
-			});
+		const allow = canDropOnHover({
+			...helpersParams,
+			direction
+		});
 
-			// console.log(dropInfo.allowDrop, dropInfo.direction);
-			// console.log(dropCell);
+		if (!allow) {
+			if (this.state.placeholderMarker.visible) {
+				this.togglePlaceholderMarker({
+					visible: false
+				});
+			}
 
-			//const { direction } = dropInfo;
-
-			//const movedData = moveItemOnHover({ items, dropCell, dragItem, direction });
-
-			//this.setState(movedData);
-		} else {
-			// if (this.canDropOnItem(dropCell)) {
-			// 	this.updatePositionOnItem(dropCell);
-			// }
+			return;
 		}
+
+		const { elementBoundingRect } = this;
+		const isItemExist = isItemExistHelper({ items, order: dropCell.order, row: dropCell.row });
+		const { top, left } = getVrPlaceholderMarkerPosition({ elementBoundingRect, cellBoundingRect, direction, isItemExist });
+		const { placeholderMarker } = this.state;
+
+		if (placeholderMarker.top === top && placeholderMarker.left === left) {
+			return;
+		}
+
+		this.togglePlaceholderMarker({
+			visible: true,
+			type: 'vr',
+			top,
+			left
+		});
 	};
 
 	getCell({ cellKey, order, row, cellSize }) {
@@ -367,7 +410,7 @@ export default class extends Component {
 						this.getRows()
 					}
 				</div>
-				{this.state.dragging && <PlaceholderMarker {...this.state.placeholderMarker} />}
+				{this.state.placeholderMarker.visible && <PlaceholderMarker {...this.state.placeholderMarker} />}
 			</div>
 		);
 	}

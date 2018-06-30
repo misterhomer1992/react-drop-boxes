@@ -9,7 +9,7 @@ class App extends Component {
     return (
       <div className="App">
         <DragDropContextProvider backend={HTML5Backend}>
-          <Board boardName="item" />
+          <Board />
         </DragDropContextProvider>
       </div>
     );

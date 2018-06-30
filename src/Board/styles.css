@@ -99,3 +99,10 @@
     height: 2px;
     width: 640px;
 }
+
+.board__vr-placeholder-marker {
+    position: absolute;
+    background-color: #4263eb;
+    height: 70px;
+    width: 2px;
+}

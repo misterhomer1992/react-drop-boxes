@@ -18,10 +18,10 @@ const squareTarget = {
 	hover(props, monitor, component) {
 		const { order, row, hoverOnRow } = props;
 		
-		const boundingRect = findDOMNode(component).getBoundingClientRect();
+		const cellBoundingRect = findDOMNode(component).getBoundingClientRect();
 
 		hoverOnRow({
-			targetBoundingRect: boundingRect,
+			cellBoundingRect,
 			dropCell: {
 				order,
 				row

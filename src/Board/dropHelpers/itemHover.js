@@ -11,21 +11,14 @@ const rules = [
     {
         name: 'drop & drag items are equal',
         off: false,
-        fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
+        fn: ({ items, dropCell, dragItem, direction, clientOffset }) => {
             return !(dropCell.row === dragItem.row && dropCell.order === dragItem.order);
-        }
-    },
-    {
-        name: 'allow drop only for existing items',
-        off: false,
-        fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
-            return isItemExist({ items, order: dropCell.order, row: dropCell.row });
         }
     },
     {
         name: 'check siblings in one row',
         off: false,
-        fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
+        fn: ({ items, dropCell, dragItem, direction, clientOffset }) => {
             if (dropCell.row !== dragItem.row) {
                 return true;
             }
@@ -44,7 +37,7 @@ const rules = [
     {
         name: 'size drop item fit for not equal rows',
         off: false,
-        fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
+        fn: ({ items, dropCell, dragItem, direction, clientOffset }) => {
             if (dropCell.row === dragItem.row) {
                 return true;
             }
@@ -60,21 +53,6 @@ const rules = [
 
             return totalRowItemsSize <= 3;
         }
-    },
-    {
-        name: 'if last item in row with right insertion',
-        off: false,
-        fn: ({ items, dropCell, dragItem, direction, clientOffset, component }) => {
-            if (dropCell.row === dragItem.row) {
-                return true;
-            }
-
-            if (!isLastItemInRow({ items, row: dropCell.row, order: dropCell.order })) {
-                return true;
-            }
-
-            return direction !== DROP_DIRECTIONS.RIGHT;
-        }
     }
 ];
 
@@ -88,30 +66,24 @@ const areAllRulesIsValid = (rules, params) => {
         const result = rule.fn(params);
 
         if (!result) {
-            console.log(`%cDrop on: %c${rule.name}`, 'font-weight: bold', 'color: red');
+            //console.log(`%cDrop on: %c${rule.name}`, 'font-weight: bold', 'color: red');
         }
 
         return result;
     });
 };
 
-export const getHoverDropItem = (params) => {
-    const { component, clientOffset } = params;
+export const canDropOnHover = (params) => {
+    return areAllRulesIsValid(rules, params);
+};
 
-    const hoverBoundingRect = findDOMNode(component).getBoundingClientRect();
-    const componentWidth = hoverBoundingRect.right - hoverBoundingRect.left;
+export const getDropDirectionOnHover = (params) => {
+    const { cellBoundingRect, clientOffset } = params;
+    const componentWidth = cellBoundingRect.right - cellBoundingRect.left;
     const hoverMiddleX = componentWidth / 2;
-    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
-    const direction = hoverClientX < hoverMiddleX ? DROP_DIRECTIONS.LEFT : DROP_DIRECTIONS.RIGHT;
-    const allowDrop = areAllRulesIsValid(rules, {
-        ...params,
-        direction
-    });
+    const hoverClientX = clientOffset.x - cellBoundingRect.left;
 
-    return {
-        allowDrop,
-        direction
-    };
+    return hoverClientX < hoverMiddleX ? DROP_DIRECTIONS.LEFT : DROP_DIRECTIONS.RIGHT;
 };
 
 const moveItem = (items, { dragItem, dropCell, direction }) => {
@@ -124,29 +96,22 @@ const moveItem = (items, { dragItem, dropCell, direction }) => {
         itemOrder += 1;
     }
 
-    return {
-        items: items.map((item) => {
-            const isMatchedItem = isItem({
-                sourceItem: item,
-                matchItem: dragItem
-            });
+    return items.map((item) => {
+        const isMatchedItem = isItem({
+            sourceItem: item,
+            matchItem: dragItem
+        });
 
-            if (!isMatchedItem) {
-                return item;
-            }
+        if (!isMatchedItem) {
+            return item;
+        }
 
-            return {
-                ...item,
-                row: dropCell.row,
-                order: itemOrder
-            }
-        }),
-        dragItem: {
-            ...dragItem,
+        return {
+            ...item,
             row: dropCell.row,
             order: itemOrder
         }
-    }
+    });
 };
 
 const normalizeHrMove = (items, { dragItem, dropCell, direction }) => {
@@ -233,18 +198,14 @@ const normalizeDragItem = (dragItem, { dropCell, direction }) => {
 };
 
 export const moveItemOnHover = ({ dragItem, dropCell, items, direction }) => {
-    const movedData = moveItem(items, {
+    items = moveItem(items, {
         dragItem,
         dropCell,
         direction
     });
 
-    items = movedData.items;
     items = normalizeHrMove(items, { dragItem, dropCell, direction });
     items = normalizeVrMove(items, { dragItem, dropCell, direction });
 
-    return {
-        items: items,
-        dragItem: movedData.dragItem
-    };
+    return items;
 };
