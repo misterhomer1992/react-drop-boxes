@@ -5,30 +5,24 @@ import classnames from 'classnames';
 import { throttle } from 'lodash';
 
 const squareTarget = {
-	canDrop(props, monitor) {
+	drop(props, monitor) {
+		if (!props.canDrop) {
+			return;
+		}
+
 		const { order, row } = props;
 
-		return props.canDropTo({
+		props.moveItemToCell({
 			order,
 			row
 		});
 	},
 
-	// drop(props, monitor) {
-	// 	const { order, row, updatePosition } = props;
-
-	// 	updatePosition({
-	// 		order,
-	// 		row
-	// 	});
-	// },
-
 	hover(props, monitor, component) {
-		const { order, row, hoverOnItem } = props;
-
+		const { order, row } = props;
 		const cellBoundingRect = findDOMNode(component).getBoundingClientRect();
 
-		hoverOnItem({
+		props.hoverOnItem({
 			dropCell: {
 				order,
 				row

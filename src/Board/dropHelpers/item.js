@@ -23,23 +23,8 @@ const rules = [
         }
     },
     {
-        name: 'deny move for last item to placeholder in one row',
-        off: false,
-        fn: ({ items, dropCell, dragItem }) => {
-            if (dragItem.row !== dropCell.row) {
-                return true;
-            }
-
-            return !isLastItemInRow({
-                items,
-                row: dragItem.row,
-                order: dragItem.order
-            });
-        }
-    },
-    {
         name: 'deny move in last row for single item',
-        off: false,
+        off: true,
         fn: ({ items, dropCell, dragItem }) => {
             if (!isLastRow({ items, row: dragItem.row })) {
                 return true;
@@ -80,6 +65,17 @@ const normalizeRows = (items) => {
     });
 };
 
+export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
+    items = normalizeOrder(items, {
+        dragItem,
+        dropItem
+    });
+
+    items = normalizeRows(items);
+
+    return items;
+}
+
 export const normalizeOrder = (items, { dragItem, dropItem }) => {
     return items.map((item) => {
         const shouldNormalize = item.row === dragItem.row && item.order > dragItem.order;
@@ -94,23 +90,6 @@ export const normalizeOrder = (items, { dragItem, dropItem }) => {
             ...item,
             order
         }
-    });
-};
-
-const areAllRulesIsValid = (rules, params) => {
-    return rules.every((rule) => {
-        //we can switch any rule
-        if (typeof rule.off !== 'undefined' && rule.off) {
-            return true;
-        }
-
-        const result = rule.fn(params);
-
-        if (!result) {
-            //console.log(`%cDrop on:${rule.name}`, 'color: red');
-        }
-
-        return result;
     });
 };
 
@@ -135,40 +114,76 @@ const moveItem = (items, { dragItem, dropItem }) => {
     });
 };
 
-export const canDropOnItem = (params) => {
-    const { items, dropCell } = params;
+const processMoveAction = (items, { dropCell, dragItem }) => {
+    return items.map(item => {
+        const isTargetItem = isItem({
+            sourceItem: item,
+            matchItem: dragItem
+        });
 
-    const isSwap = isItemExist({
-        items,
-        row: dropCell.row,
-        order: dropCell.order,
+        if (!isTargetItem) {
+            return item;
+        }
+
+        return {
+            ...item,
+            row: dropCell.row,
+            order: dropCell.order
+        }
     });
+}
 
-    if (isSwap) {
-        return false;
-    }
+const processNewPositionForSameRow = (items, { dropCell, dragItem, direction }) => {
+    const movedLeftToRight = dragItem.order < dropCell.order;
 
-    return areAllRulesIsValid(rules, params);
+    return items.map(item => {
+        const itemShouldNormalize = item.row === dropCell.row &&
+            item.id !== dragItem.id;
+
+        if (!itemShouldNormalize) {
+            return item;
+        }
+
+        let orderChange = movedLeftToRight ? -1 : 1;
+
+        return {
+            ...item,
+            order: item.order + orderChange
+        }
+    });
 };
 
-export const normalizeNormalMove = (items, { dragItem, dropItem }) => {
-    items = normalizeOrder(items, {
-        dragItem,
-        dropItem
-    });
+const processNewPositionForDiferrentRows = (items, { dropCell, dragItem }) => {
+    return items.map(item => {
+        const itemShouldNormalize = item.row === dropCell.row &&
+            item.order >= dropCell.order &&
+            item.id !== dragItem.id;
 
-    items = normalizeRows(items);
+        if (!itemShouldNormalize) {
+            return item;
+        }
+
+        return {
+            ...item,
+            order: item.order + 1
+        }
+    });
+};
+
+const processNewPosition = (items, { dropCell, dragItem, direction }) => {
+    if (dropCell.row === dragItem.row) {
+        return processNewPositionForSameRow(items, { dropCell, dragItem, direction });
+    } else {
+        return processNewPositionForDiferrentRows(items, { dropCell, dragItem });
+    }
+}
+
+/*
+    params Object - {dropCell, dragItem}
+*/
+export const moveItemToCell = (items, params) => {
+    items = processMoveAction(items, params);
+    items = processNewPosition(items, params);
 
     return items;
 }
-
-export const updatePositionOnItem = ({ dragItem, dropItem, items }) => {
-    items = moveItem(items, {
-        dragItem,
-        dropItem
-    });
-
-    items = normalizeNormalMove(items, { dragItem, dropItem });
-
-    return items;
-};

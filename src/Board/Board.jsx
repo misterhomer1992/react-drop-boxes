@@ -7,10 +7,9 @@ import Item from './Item';
 import { CANVAS_COMPONENT } from './BoardComponentTypes';
 import { getRowsCount, isItemExist as isItemExistHelper, getRowCellsCount, isItem } from './itemHelpers';
 import './styles.css';
-import { DragLayer } from 'react-dnd';
 import PlaceholderMarker from './PlaceholderMarker';
 
-import { canDropOnItem, updatePositionOnItem } from './dropHelpers/item';
+import { moveItemToCell } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
 import { canDropOnHover, getDropDirectionOnHover, moveItemOnHover } from './dropHelpers/itemHover';
 
@@ -34,8 +33,11 @@ export default class extends Component {
 			type: null,
 			visible: false,
 			left: null,
-			top: null
+			top: null,
+			direction: null
 		},
+		itemCanDrop: false,
+		dragItem: {},
 		items: [
 			{
 				type: CANVAS_COMPONENT,
@@ -80,7 +82,6 @@ export default class extends Component {
 				size: 1
 			},
 		],
-		dragItem: {}
 	};
 
 	get elementBoundingRect() {
@@ -108,25 +109,29 @@ export default class extends Component {
 		});
 	}
 
-	updatePositionOnItem = async (dropItem) => {
+	moveItemToCellAction = async (dropCell) => {
 		const { dragItem, items } = this.state;
+		const { direction } = this.state.placeholderMarker;
+		const movedLeftToRight = dragItem.order < dropCell.order;
+		// let normalizedDropCellOrder = dropCell.order;
+		// if (movedLeftToRight && direction === DROP_DIRECTIONS.LEFT) {
+		// 	itemOrder -= 1;
+		// } else if (!movedLeftToRight && direction === DROP_DIRECTIONS.RIGHT) {
+		// 	itemOrder += 1;
+		// }
 
-		if (isItem({ sourceItem: dropItem, matchItem: dragItem })) {
-			return;
-		}
-
-		const newItems = updatePositionOnItem({
-			items,
-			dropItem,
-			dragItem
+		const newItems = moveItemToCell(items, {
+			dropCell,
+			dragItem,
+			direction
 		});
 
 		await this.setState({
 			items: newItems,
 			dragItem: {
 				...dragItem,
-				row: dropItem.row,
-				order: dropItem.order
+				row: dropCell.row,
+				order: dropCell.order
 			}
 		});
 
@@ -208,30 +213,28 @@ export default class extends Component {
 		);
 	}
 
-	canDropOnItem = (dropCell) => {
-		const { dragItem, items } = this.state;
+	async togglePlaceholderMarker({ visible, type, top, left, direction }) {
+		let itemCanDrop = true;
 
-		return canDropOnItem({
-			items,
-			dropCell,
-			dragItem,
-		});
-	};
-
-	async togglePlaceholderMarker({ visible, type, top, left }) {
 		if (visible && type === 'hr') {
 			left = 0;
 		}
 
 		console.count('togglePlaceholderMarker');
 
+		if (!visible && typeof type === 'undefined') {
+			itemCanDrop = false;
+		}
+
 		await this.setState({
 			placeholderMarker: {
 				visible,
 				type,
 				top,
-				left
-			}
+				left,
+				direction
+			},
+			itemCanDrop
 		});
 	}
 
@@ -302,7 +305,8 @@ export default class extends Component {
 			visible: true,
 			type: 'vr',
 			top,
-			left
+			left,
+			direction
 		});
 	};
 
@@ -313,9 +317,9 @@ export default class extends Component {
 				order={order}
 				row={row}
 				size={cellSize}
-				canDropTo={this.canDropOnItem}
+				canDrop={this.state.itemCanDrop}
 				hoverOnItem={this.hoverOnItem}
-				updatePosition={this.updatePositionOnItem}
+				moveItemToCell={this.moveItemToCellAction}
 				dragItem={this.state.dragItem}
 			>
 				{

@@ -1,5 +1,5 @@
 import { findDOMNode } from 'react-dom'
-import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount, itemHaveBothSiblings } from '../itemHelpers';
+import { isItem, getItem, getNextItemsInRow, isItemExist, getRowItems, getEmptyRows, isLastItemInRow, isLastRow, getRowCellsCount, itemHaveBothSiblings, getRowsCount } from '../itemHelpers';
 import { normalizeNormalMove } from './item';
 
 const DROP_DIRECTIONS = {
@@ -13,6 +13,20 @@ const rules = [
         off: false,
         fn: ({ items, dropCell, dragItem, direction, clientOffset }) => {
             return !(dropCell.row === dragItem.row && dropCell.order === dragItem.order);
+        }
+    },
+    {
+        name: 'drop & drag in same row with single item',
+        off: false,
+        fn: ({ items, dropCell, dragItem, direction, clientOffset }) => {
+            if (dropCell.row !== dragItem.row) {
+                return true;
+            }
+    
+            const rowItemsCount = getRowItems({items, row: dropCell.row});
+            const allow = rowItemsCount.length !== 1;
+
+            return allow;
         }
     },
     {
