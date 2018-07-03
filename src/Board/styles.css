@@ -1,5 +1,7 @@
 .board {
     position: relative;
+    max-width: 650px;
+    margin: 100px auto;
 }
 
 .board__grid {
@@ -15,7 +17,6 @@
     box-sizing: border-box;
     height: 70px;
     margin-bottom: 1px;
-    position: relative;
 }
 
 .board__cell::before {

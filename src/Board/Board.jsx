@@ -9,17 +9,11 @@ import { getRowsCount, isItemExist as isItemExistHelper, getRowCellsCount, isIte
 import './styles.css';
 import PlaceholderMarker from './PlaceholderMarker';
 
-import { moveItemToCell } from './dropHelpers/item';
+import { moveItemToCell, getNormalizedDropCell } from './dropHelpers/item';
 import { canDropOnRow, updatePositionOnRow } from './dropHelpers/row';
 import { canDropOnHover, getDropDirectionOnHover, moveItemOnHover } from './dropHelpers/itemHover';
 
 import { getHrPlaceholderMarkerPosition, getVrPlaceholderMarkerPosition } from './dropHelpers/placeholderMarker';
-
-const boardStyles = {
-	maxWidth: '640px',
-	margin: '100px auto',
-	position: 'relative'
-};
 
 export default class extends Component {
 	syncState = {
@@ -27,7 +21,6 @@ export default class extends Component {
 	};
 
 	state = {
-		rowsCount: 1,
 		dragging: false,
 		placeholderMarker: {
 			type: null,
@@ -112,19 +105,13 @@ export default class extends Component {
 	moveItemToCellAction = async (dropCell) => {
 		const { dragItem, items } = this.state;
 		const { direction } = this.state.placeholderMarker;
-		const movedLeftToRight = dragItem.order < dropCell.order;
-		// let normalizedDropCellOrder = dropCell.order;
-		// if (movedLeftToRight && direction === DROP_DIRECTIONS.LEFT) {
-		// 	itemOrder -= 1;
-		// } else if (!movedLeftToRight && direction === DROP_DIRECTIONS.RIGHT) {
-		// 	itemOrder += 1;
-		// }
+		dropCell = getNormalizedDropCell(dropCell, { items, direction, dragItem });
 
 		const newItems = moveItemToCell(items, {
 			dropCell,
 			dragItem,
 			direction
-		});
+		});		
 
 		await this.setState({
 			items: newItems,
@@ -134,8 +121,6 @@ export default class extends Component {
 				order: dropCell.order
 			}
 		});
-
-		this.updateRowsCount();
 	}
 
 	updatePositionOnRow = async (dropItem) => {
@@ -154,8 +139,6 @@ export default class extends Component {
 		await this.setState({
 			items: newItems
 		});
-
-		this.updateRowsCount();
 	}
 
 	constructor(props) {
@@ -171,23 +154,15 @@ export default class extends Component {
 		});
 
 		const { items } = this.state;
-
-		this.state.rowsCount = getRowsCount({
-			items
-		});
 	}
 
 	componentDidMount() {
-		console.log('%c¯\\_(ツ)_/¯', 'font-size: 66px; color: #37b24d');
 	}
 
-	updateRowsCount() {
+	get rowsCount() {
 		const { items } = this.state;
-		const rowsCount = getRowsCount({ items })
 
-		this.setState({
-			rowsCount
-		});
+		return getRowsCount({ items });
 	}
 
 	getComponentMetaData({ order, row }) {
@@ -297,7 +272,7 @@ export default class extends Component {
 		const { top, left } = getVrPlaceholderMarkerPosition({ elementBoundingRect, cellBoundingRect, direction, isItemExist });
 		const { placeholderMarker } = this.state;
 
-		if (placeholderMarker.top === top && placeholderMarker.left === left) {
+		if (placeholderMarker.top === top && placeholderMarker.left === left && placeholderMarker.direction === direction) {
 			return;
 		}
 
@@ -394,9 +369,10 @@ export default class extends Component {
 
 	getRows() {
 		const rows = [];
+		const { rowsCount } = this;
 
-		for (let i = 1; i <= this.state.rowsCount + 1; i++) {
-			const isLast = i === this.state.rowsCount + 1;
+		for (let i = 1; i <= rowsCount + 1; i++) {
+			const isLast = i === rowsCount + 1;
 
 			rows.push(
 				this.renderBoardRow(i, isLast)
@@ -408,7 +384,7 @@ export default class extends Component {
 
 	render() {
 		return (
-			<div className='board' style={boardStyles}>
+			<div className='board'>
 				<div className='board__grid'>
 					{
 						this.getRows()

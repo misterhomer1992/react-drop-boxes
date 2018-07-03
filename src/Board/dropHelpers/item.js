@@ -134,21 +134,46 @@ const processMoveAction = (items, { dropCell, dragItem }) => {
 }
 
 const processNewPositionForSameRow = (items, { dropCell, dragItem, direction }) => {
-    const movedLeftToRight = dragItem.order < dropCell.order;
+    const moveLeftToRight = dragItem.order < dropCell.order;
+    const currentOrder = dropCell.order;
+    let normalizedOrder;
+
+    if (moveLeftToRight && direction === 'LEFT') {
+        normalizedOrder = currentOrder - 1;
+    } else if (!moveLeftToRight && direction === 'RIGHT') {
+        normalizedOrder = currentOrder + 1;
+    }
 
     return items.map(item => {
-        const itemShouldNormalize = item.row === dropCell.row &&
+        const itemPrimaryCondition = item.row === dropCell.row &&
             item.id !== dragItem.id;
 
-        if (!itemShouldNormalize) {
+        if (!itemPrimaryCondition) {
             return item;
         }
 
-        let orderChange = movedLeftToRight ? -1 : 1;
+        if (moveLeftToRight) {
+            const directionOrder = item.order <= dropCell.order && item.order > dragItem.order;
 
-        return {
-            ...item,
-            order: item.order + orderChange
+            if (!directionOrder) {
+                return item;
+            }
+
+            return {
+                ...item,
+                order: item.order - 1
+            }
+        } else {
+            const directionOrder = item.order >= dropCell.order;
+
+            if (!directionOrder) {
+                return item;
+            }
+
+            return {
+                ...item,
+                order: item.order + 1
+            }
         }
     });
 };
@@ -176,7 +201,68 @@ const processNewPosition = (items, { dropCell, dragItem, direction }) => {
     } else {
         return processNewPositionForDiferrentRows(items, { dropCell, dragItem });
     }
-}
+};
+
+const processPreviousPositionForDragItemRow = (items, { dragItem }) => {
+    return items.map(item => {
+        if (item.row !== dragItem.row || item.order < dragItem.order) {
+            return item;
+        }
+
+        return {
+            ...item,
+            order: item.order - 1
+        };
+    });
+};
+
+const processPreviousPositionForNextRowItems = (items, { dragItem }) => {
+    const rowDragItems = getRowItems({ items, row: dragItem.row });
+
+    if (rowDragItems.length !== 0) {
+        return items;
+    }
+
+    return items.map(item => {
+        if (item.row < dragItem.row) {
+            return item;
+        }
+
+        return {
+            ...item,
+            row: item.row - 1
+        }
+    });
+};
+
+const processPreviousPosition = (items, { dragItem, dropCell }) => {
+    if (dragItem.row === dropCell.row) {
+        return items;
+    }
+
+    items = processPreviousPositionForDragItemRow(items, { dragItem });
+    items = processPreviousPositionForNextRowItems(items, { dragItem });
+
+    return items;
+};
+
+export const getNormalizedDropCell = (dropCell, { direction, items, dragItem }) => {
+    const dropRowItems = getRowItems({ items, row: dropCell.row });
+    const currentOrder = dropCell.order;
+    let normalizedOrder = currentOrder;
+    const moveLeftToRight = dragItem.order < dropCell.order;
+
+    if (moveLeftToRight && direction === 'LEFT') {
+        normalizedOrder = currentOrder - 1;
+    } else if (!moveLeftToRight && direction === 'RIGHT') {
+        normalizedOrder = currentOrder + 1;
+    }
+
+    return {
+        ...dropCell,
+        order: normalizedOrder
+    };
+};
 
 /*
     params Object - {dropCell, dragItem}
@@ -184,6 +270,7 @@ const processNewPosition = (items, { dropCell, dragItem, direction }) => {
 export const moveItemToCell = (items, params) => {
     items = processMoveAction(items, params);
     items = processNewPosition(items, params);
+    items = processPreviousPosition(items, params);
 
     return items;
-}
+};
