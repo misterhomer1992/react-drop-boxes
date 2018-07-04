@@ -390,6 +390,11 @@ export default class extends Component {
 						this.getRows()
 					}
 				</div>
+
+				<div className='board__components-list'>
+					
+				</div>
+
 				{this.state.placeholderMarker.visible && <PlaceholderMarker {...this.state.placeholderMarker} />}
 			</div>
 		);

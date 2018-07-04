@@ -29,19 +29,26 @@ const cellSource = {
 const cellCollect = (connect, monitor) => {
     return {
         connectDragSource: connect.dragSource(),
-        draggingId: monitor.getItem()
+        connectDragPreview: connect.dragPreview(),
+        draggingId: monitor.getItem(),
+        isDragging: monitor.isDragging()
     }
 };
 
 @DragSource('cell', cellSource, cellCollect)
 export default class extends Component {
-
+    componentDidMount() {
+        const { connectDragPreview } = this.props;
+    
+        const img = new Image();
+        img.src = 'https://image.ibb.co/mQXVKy/placeholder.png';
+        img.onload = () => connectDragPreview(img);
+      }
     render() {
-        const { draggingId, isDragItem } = this.props;
+        const { draggingId, isDragItem, isDragging } = this.props;
 
         const componentStyle = {
-            backgroundColor: isDragItem ? '#a5d8ff' : '#4dabf7',
-            boxShadow: isDragItem ? '0 8px 16px 0 rgba(0, 0, 0, 0.2)' : '0 0 0 0 rgba(0, 0, 0, 0)'
+            backgroundColor: isDragging ? '#a5d8ff' : '#4dabf7'
         };
         const componentClasses = classnames('board__item', {
         });
@@ -50,7 +57,8 @@ export default class extends Component {
             this.props.connectDragSource(
                 <div className={componentClasses} style={componentStyle}>
                     {this.props.children}
-                </div>
+                </div>,
+                { dropEffect: 'copy' }
             )
         );
     }

@@ -133,16 +133,9 @@ const processMoveAction = (items, { dropCell, dragItem }) => {
     });
 }
 
-const processNewPositionForSameRow = (items, { dropCell, dragItem, direction }) => {
+const processNewPositionForSameRow = (items, { dropCell, dragItem }) => {
     const moveLeftToRight = dragItem.order < dropCell.order;
     const currentOrder = dropCell.order;
-    let normalizedOrder;
-
-    if (moveLeftToRight && direction === 'LEFT') {
-        normalizedOrder = currentOrder - 1;
-    } else if (!moveLeftToRight && direction === 'RIGHT') {
-        normalizedOrder = currentOrder + 1;
-    }
 
     return items.map(item => {
         const itemPrimaryCondition = item.row === dropCell.row &&
